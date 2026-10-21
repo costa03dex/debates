@@ -75,7 +75,7 @@ $('best').textContent=best;
 const maps={
  cidade:{name:'Cidade brasileira',road:12,length:600,sky:0x8fc9ef,ground:0x66715f,buildings:true,hills:false},
  comunidade:{name:'Comunidade',road:8,length:500,sky:0x8fc9ef,ground:0x6b665b,buildings:true,hills:true},
-   pista:{name:'Pista de grau',road:18,length:420,sky:0x91c7e9,ground:0x54705b,track:true},
+ pista:{name:'Pista de grau',road:18,length:420,sky:0x91c7e9,ground:0x54705b,track:true},
  estrada:{name:'Estrada',road:14,length:1000,sky:0x9acdec,ground:0x637653,hills:true},
  campo:{name:'Campo aberto',road:10,length:700,sky:0x9bcee8,ground:0x567a45,hills:true,dirt:true}
 };
@@ -83,7 +83,7 @@ function mat(color,roughness=.85){return new THREE.MeshStandardMaterial({color,r
 function box(parent,w,h,d,x,y,z,material){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),material);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m}
 function cylinder(parent,r1,r2,len,x,y,z,material,rotZ=0){const m=new THREE.Mesh(new THREE.CylinderGeometry(r1,r2,len,12),material);m.position.set(x,y,z);m.rotation.z=rotZ;m.castShadow=true;parent.add(m);return m}
 function makeWheel(parent,r,x,y,z){const g=new THREE.Group();g.position.set(x,y,z);const tire=new THREE.Mesh(new THREE.TorusGeometry(r*.78,r*.22,8,20),mat(0x16191e));tire.rotation.y=Math.PI/2;tire.castShadow=true;g.add(tire);const rim=new THREE.Mesh(new THREE.TorusGeometry(r*.52,.035,6,16),mat(0xb7c4ce,.4));rim.rotation.y=Math.PI/2;g.add(rim);const hub=cylinder(g,.07,.07,.15,0,0,0,mat(0x7b8a98));hub.rotation.x=Math.PI/2;parent.add(g);return g}
-function createVehicle(){
+ function createVehicle(){
  vehicle=new THREE.Group();vehicle.position.set(0,0,0);scene.add(vehicle);
  const color=new THREE.MeshStandardMaterial({color:$('vehicleColor').value,roughness:.38,metalness:.18});
  const black=mat(0x171b20),metal=mat(0x9ca8b2,.35),seat=mat(0x20252c);
@@ -196,7 +196,7 @@ function setTime(){
  if(v==='night'){scene.background.set(0x071326);scene.fog.color.set(0x071326);scene.children.forEach(o=>{if(o.isDirectionalLight)o.intensity=.45})}
  else if(v==='sunset'){scene.background.set(0xe8a477);scene.fog.color.set(0xe8a477);scene.children.forEach(o=>{if(o.isDirectionalLight)o.intensity=1.1})}
  else {scene.background.set(maps[selectedMap].sky);scene.fog.color.set(maps[selectedMap].sky);scene.children.forEach(o=>{if(o.isDirectionalLight)o.intensity=2.2})}
-  }
+}
 function startGame(){
  $('menu').classList.add('hidden');$('hud').classList.remove('hidden');$('pauseOverlay').classList.add('hidden');$('touch').style.display='';
  if(!renderer)setup();else{scene.remove(vehicle);buildWorld();createVehicle()}
@@ -213,13 +213,13 @@ document.addEventListener('keydown',e=>{const k=e.key.toLowerCase();keys[k]=true
 document.addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
 rendererSafeEvents();
 function rendererSafeEvents(){window.addEventListener('resize',()=>{if(!renderer)return;camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)})}
-function update(dt){
+ function update(dt){
  if(!running||paused||!vehicle)return;
  const bike=selectedVehicle==='bike',maxSpeed=bike?23:43,accel=bike?10:19;
  const accelerating=keys.w||keys.arrowup, braking=keys.s||keys.arrowdown, left=keys.a||keys.arrowleft,right=keys.d||keys.arrowright;
- if(accelerating)speed+=accel*dt;else speed-= (bike?1.5:2.1)*dt;
- if(braking)speed-= (bike?18:27)*dt;
- if(keys.shift&&speed>1){boost=Math.min(1,boost+dt*.65);speed+= (bike?8:13)*dt}else boost=Math.max(0,boost-dt*.8);
+ if(accelerating)speed+=accel*dt;else speed-=(bike?1.5:2.1)*dt;
+ if(braking)speed-=(bike?18:27)*dt;
+ if(keys.shift&&speed>1){boost=Math.min(1,boost+dt*.65);speed+=(bike?8:13)*dt}else boost=Math.max(0,boost-dt*.8);
  speed=THREE.MathUtils.clamp(speed,-3,maxSpeed+(boost>0?7:0));
  const spFactor=.28+Math.min(1,Math.abs(speed)/maxSpeed);
  steer=THREE.MathUtils.damp(steer,(right?1:0)-(left?1:0),7,dt);
