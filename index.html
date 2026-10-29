@@ -1,1 +1,2397 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>DEBATE POLÍTICO BR 🇧🇷 — O Jogo da Treta</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Supabase JS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- FontAwesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Inter:wght@400;600;800&family=Press+Start+2P&display=swap" rel="stylesheet">
 
+    <script>
+        window.tailwind = window.tailwind || {};
+        window.tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brGreen: '#009c3b',
+                        brYellow: '#ffdf00',
+                        brBlue: '#002776',
+                        brRed: '#e53e3e',
+                        brBlueLeft: '#3182ce',
+                        darkBg: '#0f172a',
+                        cardBg: '#1e293b'
+                    },
+                    fontFamily: {
+                        fredoka: ['Fredoka', 'sans-serif'],
+                        arcade: ['"Press Start 2P"', 'cursive'],
+                        inter: ['Inter', 'sans-serif']
+                    }
+                }
+            }
+        };
+    </script>
+
+    <style>
+        body {
+            font-family: 'Fredoka', sans-serif;
+            background-color: #0b0f19;
+            color: #f8fafc;
+            user-select: none;
+            overflow-x: hidden;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #009c3b;
+            border-radius: 4px;
+        }
+
+        .pixel-border {
+            box-shadow: 0 0 0 4px #000, inset 0 0 0 2px rgba(255,255,255,0.2);
+        }
+
+        .pulse-btn {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+            100% { transform: scale(1); }
+        }
+
+        .shake {
+            animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-2px, 0, 0); }
+            20%, 80% { transform: translate3d(4px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-6px, 0, 0); }
+            40%, 60% { transform: translate3d(6px, 0, 0); }
+        }
+
+        canvas {
+            touch-action: none;
+        }
+
+        .bg-pattern {
+            background-image: radial-gradient(rgba(0, 156, 59, 0.25) 1px, transparent 0);
+            background-size: 24px 24px;
+        }
+    </style>
+</head>
+<body class="bg-darkBg text-white min-h-screen flex flex-col justify-between bg-pattern">
+
+    <!-- TOP HEADER / NAVBAR -->
+    <header class="w-full bg-slate-900/90 border-b-4 border-brYellow p-3 px-4 flex justify-between items-center backdrop-blur-md sticky top-0 z-50">
+        <div class="flex items-center gap-3 cursor-pointer" onclick="showPage('menu')">
+            <span class="text-3xl">🇧🇷</span>
+            <div>
+                <h1 class="text-xl md:text-2xl font-bold tracking-wider text-brYellow drop-shadow-md">DEBATE POLÍTICO BR</h1>
+                <p class="text-xs text-emerald-400 font-semibold font-inter">O JOGO DA TRETA V3.0</p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <!-- Audio Toggle Button -->
+            <button id="audioToggleBtn" onclick="toggleAudio()" class="bg-slate-800 hover:bg-slate-700 text-brYellow px-3 py-2 rounded-xl border-2 border-slate-600 flex items-center gap-2 transition">
+                <i id="audioIcon" class="fas fa-volume-up text-lg"></i>
+                <span class="hidden md:inline text-xs font-bold">SOM</span>
+            </button>
+
+            <!-- User Status Pill -->
+            <div id="userProfilePill" onclick="showPage('customizer')" class="hidden sm:flex items-center gap-2 bg-slate-800 hover:bg-slate-700 p-1 px-3 rounded-full border border-slate-600 cursor-pointer transition">
+                <span id="pillSideIndicator" class="w-3 h-3 rounded-full bg-red-500"></span>
+                <span id="pillUserName" class="text-xs font-bold text-slate-200">Candidato</span>
+                <span id="pillUserLevel" class="bg-brYellow text-slate-950 font-black text-[10px] px-2 py-0.5 rounded-full">Nível 1</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTAINER WITH SCREENS -->
+    <main class="flex-grow flex items-center justify-center p-3 md:p-6 relative max-w-7xl mx-auto w-full">
+
+        <!-- ==================== 1. TELA INICIAL (MAIN MENU) ==================== -->
+        <section id="page-menu" class="w-full max-w-4xl flex flex-col items-center text-center py-6">
+            <div class="relative mb-6">
+                <span class="absolute -top-6 -left-6 text-5xl animate-bounce">📢</span>
+                <span class="absolute -top-6 -right-6 text-5xl animate-bounce" style="animation-delay: 0.3s">🥊</span>
+                <h2 class="text-4xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-brYellow via-green-400 to-brGreen drop-shadow-lg tracking-tight uppercase">
+                    DEBATE POLÍTICO BR
+                </h2>
+                <div class="inline-block bg-brRed text-white text-xs font-black uppercase px-3 py-1 rounded-full mt-2 tracking-widest shadow-md">
+                    Edição Extraordinária da Treta
+                </div>
+            </div>
+
+            <p class="text-slate-300 text-sm md:text-lg max-w-2xl font-inter mb-8 leading-relaxed">
+                "Na política, todo mundo tem uma opinião. Mas quem realmente vence o debate quando o microfone esquenta e os santinhos voam?"
+            </p>
+
+            <!-- Menu Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full max-w-3xl">
+                <button onclick="startSinglePlayer()" class="pulse-btn bg-gradient-to-r from-emerald-600 to-brGreen hover:from-emerald-500 hover:to-green-500 text-white font-bold py-4 px-6 rounded-2xl border-b-4 border-emerald-900 shadow-xl flex items-center justify-center gap-3 text-lg transition transform hover:-translate-y-1">
+                    <i class="fas fa-play text-brYellow text-2xl"></i>
+                    <span>JOGAR (SOLO / IA)</span>
+                </button>
+
+                <button onclick="showPage('multiplayer')" class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-4 px-6 rounded-2xl border-b-4 border-indigo-950 shadow-xl flex items-center justify-center gap-3 text-lg transition transform hover:-translate-y-1">
+                    <i class="fas fa-users text-cyan-300 text-2xl"></i>
+                    <span>MULTIPLAYER (30 SALAS)</span>
+                </button>
+
+                <button onclick="showPage('customizer')" class="bg-slate-800 hover:bg-slate-700 text-slate-100 font-bold py-4 px-6 rounded-2xl border-b-4 border-slate-950 shadow-lg flex items-center justify-center gap-3 text-base transition transform hover:-translate-y-1">
+                    <i class="fas fa-user-edit text-brYellow text-xl"></i>
+                    <span>CRIAR CANDIDATO</span>
+                </button>
+
+                <button onclick="showPage('roster')" class="bg-slate-800 hover:bg-slate-700 text-slate-100 font-bold py-4 px-6 rounded-2xl border-b-4 border-slate-950 shadow-lg flex items-center justify-center gap-3 text-base transition transform hover:-translate-y-1">
+                    <i class="fas fa-masks-theater text-pink-400 text-xl"></i>
+                    <span>ROSTER DE MEMES</span>
+                </button>
+
+                <button onclick="showPage('modes')" class="bg-slate-800 hover:bg-slate-700 text-slate-100 font-bold py-4 px-6 rounded-2xl border-b-4 border-slate-950 shadow-lg flex items-center justify-center gap-3 text-base transition transform hover:-translate-y-1">
+                    <i class="fas fa-trophy text-amber-400 text-xl"></i>
+                    <span>MODOS & ELEIÇÃO</span>
+                </button>
+
+                <button onclick="showPage('ranking')" class="bg-slate-800 hover:bg-slate-700 text-slate-100 font-bold py-4 px-6 rounded-2xl border-b-4 border-slate-950 shadow-lg flex items-center justify-center gap-3 text-base transition transform hover:-translate-y-1">
+                    <i class="fas fa-award text-purple-400 text-xl"></i>
+                    <span>CONQUISTAS</span>
+                </button>
+
+                <button onclick="showPage('howTo')" class="bg-slate-800 hover:bg-slate-700 text-slate-100 font-bold py-3 px-4 rounded-2xl border-b-4 border-slate-950 shadow-lg flex items-center justify-center gap-2 text-sm transition">
+                    <i class="fas fa-circle-question text-teal-400 text-lg"></i>
+                    <span>COMO JOGAR</span>
+                </button>
+
+                <button onclick="showPage('settings')" class="bg-slate-800 hover:bg-slate-700 text-slate-100 font-bold py-3 px-4 rounded-2xl border-b-4 border-slate-950 shadow-lg flex items-center justify-center gap-2 text-sm transition">
+                    <i class="fas fa-gear text-slate-400 text-lg"></i>
+                    <span>CONFIGURAÇÕES</span>
+                </button>
+            </div>
+
+            <!-- Quick Meme Banner Footer -->
+            <div class="mt-10 bg-slate-900/80 p-4 rounded-2xl border border-slate-800 max-w-xl w-full flex items-center gap-4 text-left">
+                <div class="text-3xl">🗳️</div>
+                <div>
+                    <div class="text-xs text-brYellow font-bold uppercase">Conselho da Justiça Eleitoral do Meme</div>
+                    <p class="text-xs text-slate-400 font-inter">"Argumentos ganham vaias ou aplausos, mas uma boa resposta de retórica desconcerta qualquer opositor!"</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== 2. ESCOLHA DO LADO & PERSONALIZAÇÃO ==================== -->
+        <section id="page-customizer" class="hidden w-full max-w-4xl bg-slate-900/90 rounded-3xl p-6 border-2 border-slate-700 shadow-2xl">
+            <div class="flex justify-between items-center mb-6 pb-3 border-b border-slate-800">
+                <div>
+                    <h2 class="text-2xl font-bold text-brYellow flex items-center gap-2">
+                        <i class="fas fa-user-gear"></i> PERSONALIZAR CANDIDATO
+                    </h2>
+                    <p class="text-xs text-slate-400">Monte seu visual, escolha seu partido e acessórios com preview em tempo real.</p>
+                </div>
+                <button onclick="showPage('menu')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-xl text-xs font-bold">
+                    <i class="fas fa-arrow-left mr-1"></i> VOLTAR
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+                <!-- Avatar Preview Canvas Column -->
+                <div class="md:col-span-5 bg-slate-950/80 rounded-2xl p-4 flex flex-col items-center justify-center border border-slate-800">
+                    <span class="text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider">Preview do Visual</span>
+                    <canvas id="customizerCanvas" width="240" height="280" class="bg-slate-900 rounded-xl border border-slate-800 shadow-inner mb-4"></canvas>
+                    
+                    <div class="flex gap-2 w-full mb-3">
+                        <button onclick="previewPose('talk')" class="flex-1 bg-slate-800 hover:bg-slate-700 text-xs py-2 rounded-lg font-bold">Speech</button>
+                        <button onclick="previewPose('victory')" class="flex-1 bg-emerald-800 hover:bg-emerald-700 text-xs py-2 rounded-lg font-bold">Vitória</button>
+                        <button onclick="previewPose('punch')" class="flex-1 bg-rose-800 hover:bg-rose-700 text-xs py-2 rounded-lg font-bold">Ataque</button>
+                    </div>
+
+                    <!-- Party Badge Preview -->
+                    <div class="w-full bg-slate-900 p-2.5 rounded-xl border border-slate-800 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <span id="customPartyTagBadge" class="bg-brYellow text-slate-950 font-black text-xs px-2 py-1 rounded-md">PBR</span>
+                            <span id="customPartyNameLabel" class="text-xs text-slate-300 font-bold truncate max-w-[120px]">Partido BR</span>
+                        </div>
+                        <span id="customSideBadge" class="text-xs font-bold text-red-400">🔴 ESQ</span>
+                    </div>
+                </div>
+
+                <!-- Form Controls Column -->
+                <div class="md:col-span-7 flex flex-col gap-4">
+                    <!-- Political Side & Gender Selection -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-300 mb-2 uppercase">1. Lado Político & Gênero</label>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                            <button id="sideBtnEsquerda" onclick="selectPoliticalSide('ESQUERDA')" class="p-3 rounded-2xl border-2 border-red-500 bg-red-950/40 text-red-300 font-bold flex items-center justify-center gap-1 hover:bg-red-900/40 transition text-xs">
+                                🔴 ESQUERDA
+                            </button>
+                            <button id="sideBtnDireita" onclick="selectPoliticalSide('DIREITA')" class="p-3 rounded-2xl border-2 border-blue-500/30 bg-slate-800/60 text-slate-400 font-bold flex items-center justify-center gap-1 hover:bg-blue-900/40 transition text-xs">
+                                🔵 DIREITA
+                            </button>
+                            <button id="genderBtnM" onclick="selectGender('M')" class="p-3 rounded-2xl border-2 border-blue-500 bg-blue-950/80 text-blue-300 font-bold flex items-center justify-center gap-1 transition shadow-lg text-xs">
+                                👨 MASC
+                            </button>
+                            <button id="genderBtnF" onclick="selectGender('F')" class="p-3 rounded-2xl border-2 border-slate-700 bg-slate-800 text-slate-400 font-bold flex items-center justify-center gap-1 hover:bg-slate-700 transition text-xs">
+                                👩 FEM
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Party & Name Inputs -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-300 mb-1">Nome do Político</label>
+                            <input id="customNameInput" type="text" value="Candidato Zé" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brYellow" oninput="updateCustomizer()">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-300 mb-1">Sigla do Partido</label>
+                            <input id="customPartyTagInput" type="text" value="PBR" maxlength="5" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-brYellow font-black uppercase focus:outline-none focus:border-brYellow" oninput="updateCustomizer()">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-300 mb-1">Nome do Partido</label>
+                            <input id="customPartyNameInput" type="text" value="Partido do Brasil" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brYellow" oninput="updateCustomizer()">
+                        </div>
+                    </div>
+
+                    <!-- Skin & Suit Color Selectors -->
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-300 mb-1">Tom de Pele</label>
+                            <input id="customSkinColorInput" type="color" value="#f6ad55" class="w-full h-9 bg-slate-800 border border-slate-700 rounded-xl p-1 cursor-pointer" onchange="updateCustomizer()">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-300 mb-1">Cor do Cabelo</label>
+                            <input id="customHairColorInput" type="color" value="#2d3748" class="w-full h-9 bg-slate-800 border border-slate-700 rounded-xl p-1 cursor-pointer" onchange="updateCustomizer()">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-300 mb-1">Cor do Terno/Roupa</label>
+                            <input id="customSuitColorInput" type="color" value="#1e293b" class="w-full h-9 bg-slate-800 border border-slate-700 rounded-xl p-1 cursor-pointer" onchange="updateCustomizer()">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-300 mb-1">Expressão Facial</label>
+                            <select id="customExpressionSelect" onchange="updateCustomizer()" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-2 py-2 text-xs text-white">
+                                <option value="normal">Normal</option>
+                                <option value="firme">Firme / Bravo</option>
+                                <option value="sorriso">Sorriso Eleitoral</option>
+                                <option value="surpreso">Chocado / Meme</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Hair & Accessories Selectors -->
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-300 mb-1">Corte de Cabelo</label>
+                            <select id="customHairSelect" onchange="updateCustomizer()" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                                <option value="curto">Curto Slick / Social</option>
+                                <option value="topete">Topete Volumoso Presidencial</option>
+                                <option value="longo">Longo Elegante / Liso</option>
+                                <option value="afro">Crespo Afro / Pomp</option>
+                                <option value="mohawk">Mohawk / Punk</option>
+                                <option value="capacete">Cabelo Capacete</option>
+                                <option value="careca">Careca / Calvo com Brilho</option>
+                                <option value="classico">Clássico Partido no Meio</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-300 mb-1">Acessórios Exclusivos</label>
+                            <select id="customAccessorySelect" onchange="updateCustomizer()" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                                <option value="none">Nenhum</option>
+                                <option value="oculos">Óculos Escuros "Turn Down"</option>
+                                <option value="faixa">Faixa Presidencial Verde-Amarela</option>
+                                <option value="microfone">Microfone de Palanque</option>
+                                <option value="bone">Boné de Campanha</option>
+                                <option value="capacete">Capacete de Segurança Obras</option>
+                                <option value="dossie">Dossiê de Documentos</option>
+                                <option value="constituicao">Livro da Constituição Federal</option>
+                                <option value="detergente">Detergente Ypê</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Save & Apply Button -->
+                    <button onclick="saveCustomCharacter()" class="mt-2 bg-gradient-to-r from-brGreen to-emerald-500 hover:from-green-500 hover:to-emerald-400 text-slate-950 font-black py-3 px-4 rounded-xl shadow-lg uppercase tracking-wider flex items-center justify-center gap-2">
+                        <i class="fas fa-floppy-disk text-lg"></i> SALVAR CANDIDATO
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== 3. ROSTER DE PERSONAGENS ==================== -->
+        <section id="page-roster" class="hidden w-full max-w-5xl bg-slate-900/90 rounded-3xl p-6 border-2 border-slate-700 shadow-2xl">
+            <div class="flex justify-between items-center mb-6 pb-3 border-b border-slate-800">
+                <div>
+                    <h2 class="text-2xl font-bold text-brYellow flex items-center gap-2">
+                        <i class="fas fa-users-viewfinder"></i> GALERIA DE DEBATORES MEME
+                    </h2>
+                    <p class="text-xs text-slate-400">Escolha um dos debatedores icônicos da política brasileira fictícia.</p>
+                </div>
+                <button onclick="showPage('menu')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-xl text-xs font-bold">
+                    <i class="fas fa-arrow-left mr-1"></i> VOLTAR
+                </button>
+            </div>
+
+            <div id="rosterGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                <!-- Injected via JavaScript -->
+            </div>
+        </section>
+
+        <!-- ==================== 4. SISTEMA DE DEBATE (DEBATE ENGINE) ==================== -->
+        <section id="page-debate" class="hidden w-full max-w-5xl bg-slate-900/95 rounded-3xl p-4 md:p-6 border-2 border-slate-700 shadow-2xl flex flex-col gap-4">
+
+            <!-- Debate Header HUD -->
+            <div class="flex flex-wrap justify-between items-center bg-slate-950 p-4 rounded-2xl border border-slate-800 gap-3">
+                <!-- Player Box -->
+                <div class="flex items-center gap-3">
+                    <div id="debateP1Avatar" class="w-12 h-12 rounded-xl bg-slate-800 flex items-center justify-center text-2xl border border-slate-600">👤</div>
+                    <div>
+                        <div class="flex items-center gap-1.5">
+                            <span id="debateP1PartyBadge" class="bg-brYellow text-slate-950 text-[10px] font-black px-1.5 py-0.5 rounded">PBR</span>
+                            <span id="debateP1Name" class="font-bold text-sm text-white">Você</span>
+                        </div>
+                        <div id="debateP1Score" class="text-xs text-emerald-400 font-bold">Aprovação: 50%</div>
+                    </div>
+                </div>
+
+                <!-- Topic & Round Status -->
+                <div class="text-center flex-1 max-w-xs mx-auto">
+                    <div id="debateRoundBadge" class="text-[10px] uppercase font-bold bg-slate-800 text-brYellow px-3 py-0.5 rounded-full inline-block tracking-wider mb-1">RODADA 1 DE 3</div>
+                    <div id="debateTopicTitle" class="text-sm font-bold text-white line-clamp-1">Educação e Economia</div>
+                    <div class="flex items-center justify-center gap-2 mt-1">
+                        <i class="fas fa-clock text-rose-400 text-xs"></i>
+                        <span id="debateTimerText" class="text-xs font-mono font-bold text-rose-300">45s para discursar</span>
+                    </div>
+                </div>
+
+                <!-- Opponent Box -->
+                <div class="flex items-center gap-3 text-right">
+                    <div>
+                        <div class="flex items-center justify-end gap-1.5">
+                            <span id="debateP2Name" class="font-bold text-sm text-white">Opositor</span>
+                            <span id="debateP2PartyBadge" class="bg-red-600 text-white text-[10px] font-black px-1.5 py-0.5 rounded">OP</span>
+                        </div>
+                        <div id="debateP2Score" class="text-xs text-rose-400 font-bold">Aprovação: 50%</div>
+                    </div>
+                    <div id="debateP2Avatar" class="w-12 h-12 rounded-xl bg-slate-800 flex items-center justify-center text-2xl border border-slate-600">🤖</div>
+                </div>
+            </div>
+
+            <!-- Stage Visual Canvas (Podiums, Audience & Speech Bubbles) -->
+            <div class="relative w-full rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 h-64 md:h-80 shadow-inner flex items-center justify-center">
+                <canvas id="debateStageCanvas" class="w-full h-full block"></canvas>
+
+                <!-- Floating Crowd Mood Meter Overlay -->
+                <div class="absolute top-3 left-1/2 -translate-x-1/2 bg-slate-900/90 border border-slate-700 px-4 py-1.5 rounded-full flex items-center gap-3 shadow-md z-10">
+                    <span class="text-xs font-bold text-slate-300">Reação da Plateia:</span>
+                    <div class="w-32 h-3 bg-slate-800 rounded-full overflow-hidden border border-slate-600">
+                        <div id="crowdMoodBar" class="h-full bg-gradient-to-r from-red-500 via-yellow-400 to-emerald-500 w-1/2 transition-all duration-500"></div>
+                    </div>
+                    <span id="crowdMoodText" class="text-xs font-bold text-brYellow">Equilibrado</span>
+                </div>
+
+                <!-- Reaction Floating Banner Popup -->
+                <div id="debateReactionPopup" class="hidden absolute top-12 left-1/2 -translate-x-1/2 bg-brYellow text-slate-950 font-black text-lg md:text-2xl px-6 py-2 rounded-2xl shadow-2xl border-4 border-slate-950 transform animate-bounce z-20">
+                    MITOU! 🔥
+                </div>
+            </div>
+
+            <!-- Free-Text Argument Speech Box -->
+            <div class="bg-slate-950 p-3 rounded-2xl border border-slate-800 flex flex-col gap-2">
+                <div class="flex justify-between items-center text-xs text-slate-400">
+                    <span class="font-bold text-emerald-400"><i class="fas fa-pen-clip"></i> Digite seu Discurso / Resposta:</span>
+                    <span id="argCharCounter" class="text-[11px]">0 / 280 caracteres</span>
+                </div>
+                <div class="flex gap-2">
+                    <textarea id="freeTextArgumentInput" rows="2" maxlength="280" placeholder="Ex: Vamos investir pesadamente em escolas técnicas, cortar privilégios da máquina pública e garantir transparência total!" class="flex-1 bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-brYellow font-inter resize-none" oninput="updateArgCounter()"></textarea>
+                    <button onclick="submitFreeTextArgument()" class="bg-gradient-to-r from-emerald-600 to-brGreen hover:from-emerald-500 hover:to-green-500 text-slate-950 font-black px-5 rounded-xl text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-lg">
+                        <i class="fas fa-paper-plane text-sm"></i> Falar
+                    </button>
+                </div>
+                <!-- Quick Phrase Chips -->
+                <div class="flex flex-wrap gap-1.5 mt-1">
+                    <button onclick="insertQuickPhrase('Proponho criar um programa emergencial de saúde pública e hospitais!')" class="bg-slate-900 hover:bg-slate-800 text-[11px] text-slate-300 px-2.5 py-1 rounded-lg border border-slate-800">+ Saúde Pública</button>
+                    <button onclick="insertQuickPhrase('Os dados mostram que precisamos cortar impostos sobre o consumo e gerar empregos!')" class="bg-slate-900 hover:bg-slate-800 text-[11px] text-slate-300 px-2.5 py-1 rounded-lg border border-slate-800">+ Economia e Emprego</button>
+                    <button onclick="insertQuickPhrase('Peço respeito ao povo brasileiro e exijo direito de resposta contra essas acusações!')" class="bg-slate-900 hover:bg-slate-800 text-[11px] text-slate-300 px-2.5 py-1 rounded-lg border border-slate-800">+ Direito de Resposta</button>
+                    <button onclick="insertQuickPhrase('Cadê as provas? Isso é mentira da oposição para desviar o foco!')" class="bg-slate-900 hover:bg-slate-800 text-[11px] text-slate-300 px-2.5 py-1 rounded-lg border border-slate-800">+ Provocação Meme</button>
+                </div>
+            </div>
+
+            <!-- Debate Dialogue Log -->
+            <div id="debateLogBox" class="bg-slate-950/90 rounded-2xl p-3 border border-slate-800 h-24 overflow-y-auto font-inter text-xs flex flex-col gap-2">
+                <div class="text-slate-500 italic">--- O mediador abre o plenário. Escreva seu argumento e clique em FALAR. ---</div>
+            </div>
+        </section>
+
+        <!-- ==================== 5. SISTEMA DE BATALHA ARCADE (2D CANVAS FIGHTER) ==================== -->
+        <section id="page-fight" class="hidden w-full max-w-5xl bg-slate-900/95 rounded-3xl p-4 md:p-6 border-2 border-slate-700 shadow-2xl flex flex-col gap-4">
+
+            <!-- HUD Health Bars -->
+            <div class="flex justify-between items-center bg-slate-950 p-4 rounded-2xl border border-slate-800 gap-4">
+                <!-- P1 Health -->
+                <div class="flex-1">
+                    <div class="flex justify-between text-xs font-bold mb-1">
+                        <span id="fightP1Name" class="text-emerald-400">Jogador</span>
+                        <span id="fightP1HpText" class="text-white">100 HP</span>
+                    </div>
+                    <div class="w-full bg-slate-800 h-4 rounded-full overflow-hidden border border-slate-700">
+                        <div id="fightP1HpBar" class="bg-gradient-to-r from-emerald-500 to-green-400 h-full w-full transition-all"></div>
+                    </div>
+                    <!-- Special Bar -->
+                    <div class="w-full bg-slate-900 h-2 rounded-full overflow-hidden mt-1 border border-slate-800">
+                        <div id="fightP1SpecialBar" class="bg-brYellow h-full w-0 transition-all"></div>
+                    </div>
+                </div>
+
+                <!-- VS Badge -->
+                <div class="text-center font-black text-2xl text-brYellow px-2">VS</div>
+
+                <!-- P2 Health -->
+                <div class="flex-1 text-right">
+                    <div class="flex justify-between text-xs font-bold mb-1">
+                        <span id="fightP2HpText" class="text-white">100 HP</span>
+                        <span id="fightP2Name" class="text-rose-400">Adversário</span>
+                    </div>
+                    <div class="w-full bg-slate-800 h-4 rounded-full overflow-hidden border border-slate-700 dir-rtl">
+                        <div id="fightP2HpBar" class="bg-gradient-to-r from-rose-500 to-red-600 h-full w-full transition-all float-right"></div>
+                    </div>
+                    <!-- Special Bar -->
+                    <div class="w-full bg-slate-900 h-2 rounded-full overflow-hidden mt-1 border border-slate-800">
+                        <div id="fightP2SpecialBar" class="bg-brYellow h-full w-0 transition-all float-right"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Arcade Fight Canvas -->
+            <div class="relative w-full rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 h-72 md:h-96 shadow-inner flex items-center justify-center">
+                <canvas id="fightCanvas" width="800" height="400" class="w-full h-full block"></canvas>
+
+                <!-- KO Overlay Banner -->
+                <div id="fightKoBanner" class="hidden absolute text-5xl md:text-7xl font-black text-brYellow drop-shadow-[0_10px_10px_rgba(0,0,0,0.9)] tracking-widest animate-pulse">
+                    K.O.! 🥊
+                </div>
+            </div>
+
+            <!-- Touch Controls overlay for Mobile & Desktop Key Legend -->
+            <div class="bg-slate-950 p-3 rounded-2xl border border-slate-800 flex flex-wrap items-center justify-between gap-3">
+                <!-- Controls Legend -->
+                <div class="text-xs text-slate-400 hidden sm:block">
+                    <span class="font-bold text-white">Teclas:</span> [A/D] Mover | [W] Pular | [J] Soco Santinho | [K] Chute Eleitoral | [L] Especial Meme
+                </div>
+
+                <!-- Mobile Virtual Buttons -->
+                <div class="flex items-center justify-between w-full sm:w-auto gap-2">
+                    <div class="flex gap-1">
+                        <button ontouchstart="touchMove(-1)" touchend="touchMove(0)" mousedown="touchMove(-1)" mouseup="touchMove(0)" class="bg-slate-800 active:bg-slate-700 px-4 py-3 rounded-xl font-bold text-lg text-white">◄</button>
+                        <button ontouchstart="touchJump()" class="bg-slate-800 active:bg-slate-700 px-4 py-3 rounded-xl font-bold text-lg text-white">▲</button>
+                        <button ontouchstart="touchMove(1)" touchend="touchMove(0)" mousedown="touchMove(1)" mouseup="touchMove(0)" class="bg-slate-800 active:bg-slate-700 px-4 py-3 rounded-xl font-bold text-lg text-white">►</button>
+                    </div>
+
+                    <div class="flex gap-2">
+                        <button onclick="fightAttack('punch')" class="bg-emerald-700 active:bg-emerald-600 px-4 py-3 rounded-xl font-bold text-xs text-white">SOCO 👊</button>
+                        <button onclick="fightAttack('kick')" class="bg-blue-700 active:bg-blue-600 px-4 py-3 rounded-xl font-bold text-xs text-white">CHUTE 🦶</button>
+                        <button id="specialBtn" onclick="fightAttack('special')" class="bg-brYellow active:bg-amber-400 text-slate-950 px-4 py-3 rounded-xl font-black text-xs">ESPECIAL 🌟</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== 6. MULTIPLAYER ROOMS (FIREBASE / LOCAL FALLBACK) ==================== -->
+        <section id="page-multiplayer" class="hidden w-full max-w-4xl bg-slate-900/90 rounded-3xl p-6 border-2 border-slate-700 shadow-2xl">
+            <div class="flex justify-between items-center mb-6 pb-3 border-b border-slate-800">
+                <div>
+                    <h2 class="text-2xl font-bold text-brYellow flex items-center gap-2">
+                        <i class="fas fa-globe"></i> SALAS MULTIPLAYER (ATÉ 30 JOGADORES)
+                    </h2>
+                    <p class="text-xs text-slate-400">Conecte-se com até 30 eleitores em tempo real ou simule salas locais.</p>
+                </div>
+                <button onclick="showPage('menu')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-xl text-xs font-bold">
+                    <i class="fas fa-arrow-left mr-1"></i> VOLTAR
+                </button>
+            </div>
+
+            <!-- Backend Status Notice Banner -->
+            <div id="mpStatusBanner" class="bg-amber-950/60 border border-amber-500/40 p-3 rounded-2xl mb-6 flex items-center gap-3 text-xs text-amber-200">
+                <i class="fas fa-network-wired text-xl text-amber-400"></i>
+                <div>
+                    <span class="font-bold block">Modo de Conexão: Simulação Local (Offline)</span>
+                    <span>Para habilitar o multiplayer online real em nuvem, insira as credenciais do Firebase nas Configurações.</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Create Room Card -->
+                <div class="bg-slate-950 p-5 rounded-2xl border border-slate-800 flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-lg font-bold text-emerald-400 mb-2 flex items-center gap-2">
+                            <i class="fas fa-plus-circle"></i> Criar Nova Sala
+                        </h3>
+                        <p class="text-xs text-slate-400 mb-4">Seja o anfitrião e defina o formato da partida política.</p>
+
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-300 mb-1">Modo da Sala</label>
+                                <select id="createRoomMode" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white">
+                                    <option value="DEBATE_ONLY">Debate Político X1 / Grupo</option>
+                                    <option value="DEBATE_FIGHT">Debate + Batalha Arcade</option>
+                                    <option value="TORNEIO">Torneio Político (Chaveamento)</option>
+                                    <option value="MEME">Modo Treta Meme Rápida</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-slate-300 mb-1">Tema Principal</label>
+                                <select id="createRoomTopic" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-white">
+                                    <option value="Educação e Escolas">Educação e Escolas</option>
+                                    <option value="Saúde Pública e SUS">Saúde Pública e SUS</option>
+                                    <option value="Economia e Impostos">Economia e Impostos</option>
+                                    <option value="Segurança e Crime">Segurança e Crime</option>
+                                    <option value="Meio Ambiente e Amazônia">Meio Ambiente e Amazônia</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button onclick="createRoom()" class="mt-6 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl shadow-lg transition">
+                        CRIAR SALA PRIVADA
+                    </button>
+                </div>
+
+                <!-- Join Room Card -->
+                <div class="bg-slate-950 p-5 rounded-2xl border border-slate-800 flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-lg font-bold text-blue-400 mb-2 flex items-center gap-2">
+                            <i class="fas fa-right-to-bracket"></i> Entrar em uma Sala
+                        </h3>
+                        <p class="text-xs text-slate-400 mb-4">Digite o código de 6 dígitos gerado pelo anfitrião.</p>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-300 mb-1">Código da Sala</label>
+                            <input id="joinRoomCodeInput" type="text" placeholder="Ex: BR8899" uppercase maxlength="6" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-lg font-mono text-center text-brYellow tracking-widest uppercase focus:outline-none focus:border-brYellow">
+                        </div>
+                    </div>
+
+                    <button onclick="joinRoom()" class="mt-6 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl shadow-lg transition">
+                        ENTRAR NA SALA
+                    </button>
+                </div>
+            </div>
+
+            <!-- Active Room Lobby Modal / Container -->
+            <div id="roomLobbyContainer" class="hidden mt-6 bg-slate-950 p-5 rounded-2xl border-2 border-brYellow">
+                <div class="flex justify-between items-center mb-4 pb-2 border-b border-slate-800">
+                    <div>
+                        <span class="text-xs text-slate-400 uppercase">SALA ATIVA:</span>
+                        <h3 id="roomLobbyCode" class="text-2xl font-black text-brYellow font-mono">BR1234</h3>
+                    </div>
+                    <button onclick="leaveRoom()" class="bg-rose-900 hover:bg-rose-800 text-xs text-rose-200 font-bold px-3 py-1.5 rounded-lg">
+                        SAIR DA SALA
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
+                    <!-- Participant List -->
+                    <div class="md:col-span-7 bg-slate-900 p-3 rounded-xl border border-slate-800">
+                        <div class="text-xs font-bold text-slate-300 mb-2 flex justify-between">
+                            <span>Participantes na Sala</span>
+                            <span id="roomCountText" class="text-brYellow">1 / 30</span>
+                        </div>
+                        <div id="roomPlayersList" class="space-y-2 max-h-48 overflow-y-auto pr-1">
+                            <!-- Players populated here -->
+                        </div>
+                    </div>
+
+                    <!-- Chat & Host Controls -->
+                    <div class="md:col-span-5 flex flex-col justify-between bg-slate-900 p-3 rounded-xl border border-slate-800">
+                        <div>
+                            <div class="text-xs font-bold text-slate-300 mb-2">Chat da Sala</div>
+                            <div id="roomChatBox" class="bg-slate-950 p-2 rounded-lg h-32 overflow-y-auto text-xs space-y-1 mb-2 font-inter">
+                                <div class="text-slate-500 italic">Bem-vindo ao bate-papo eleitoral!</div>
+                            </div>
+                            <div class="flex gap-1">
+                                <input id="roomChatInput" type="text" placeholder="Sua mensagem..." class="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-xs text-white">
+                                <button onclick="sendChatMessage()" class="bg-brGreen hover:bg-emerald-600 text-slate-950 font-bold px-3 py-1 rounded-lg text-xs">Enviar</button>
+                            </div>
+                        </div>
+
+                        <button id="startRoomMatchBtn" onclick="startMultiplayerMatch()" class="mt-4 bg-brYellow hover:bg-yellow-400 text-slate-950 font-black py-2.5 rounded-xl text-sm shadow-md">
+                            INICIAR PARTIDA
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== 7. MODOS DE JOGO & ELEIÇÃO ==================== -->
+        <section id="page-modes" class="hidden w-full max-w-4xl bg-slate-900/90 rounded-3xl p-6 border-2 border-slate-700 shadow-2xl">
+            <div class="flex justify-between items-center mb-6 pb-3 border-b border-slate-800">
+                <div>
+                    <h2 class="text-2xl font-bold text-brYellow flex items-center gap-2">
+                        <i class="fas fa-trophy"></i> MODOS DE JOGO & CAMPANHA
+                    </h2>
+                    <p class="text-xs text-slate-400">Escolha o formato da sua jornada rumo à Presidência dos Memes.</p>
+                </div>
+                <button onclick="showPage('menu')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-xl text-xs font-bold">
+                    <i class="fas fa-arrow-left mr-1"></i> VOLTAR
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                <div onclick="selectGameMode('DEBATE_ONLY')" class="bg-slate-950 p-4 rounded-2xl border border-slate-800 hover:border-brYellow cursor-pointer transition">
+                    <div class="text-3xl mb-2">🗣️</div>
+                    <h3 class="font-bold text-white text-sm mb-1">Modo Debate Puro</h3>
+                    <p class="text-xs text-slate-400">Confronto focado em retórica, argumentos e conquista do eleitorado.</p>
+                </div>
+
+                <div onclick="selectGameMode('FIGHT_ONLY')" class="bg-slate-950 p-4 rounded-2xl border border-slate-800 hover:border-brYellow cursor-pointer transition">
+                    <div class="text-3xl mb-2">🥊</div>
+                    <h3 class="font-bold text-white text-sm mb-1">Modo Treta Arcade</h3>
+                    <p class="text-xs text-slate-400">Luta de rua cômica estilo arcade com papéis de campanha e raios pix.</p>
+                </div>
+
+                <div onclick="selectGameMode('DEBATE_FIGHT')" class="bg-slate-950 p-4 rounded-2xl border border-slate-800 hover:border-brYellow cursor-pointer transition">
+                    <div class="text-3xl mb-2">🔥</div>
+                    <h3 class="font-bold text-white text-sm mb-1">Debate + Batalha</h3>
+                    <p class="text-xs text-slate-400">O formato completo: primeiro o microfone, depois o ringue cartunesco!</p>
+                </div>
+
+                <div onclick="startCampaignMode()" class="bg-gradient-to-br from-emerald-950 to-slate-950 p-4 rounded-2xl border border-brGreen hover:border-emerald-400 cursor-pointer transition">
+                    <div class="text-3xl mb-2">🗺️</div>
+                    <h3 class="font-bold text-emerald-400 text-sm mb-1">Modo Eleição BR</h3>
+                    <p class="text-xs text-slate-400">Percorra as 5 regiões do Brasil conquistando eleitores em uma campanha completa.</p>
+                </div>
+
+                <div onclick="startTournamentMode()" class="bg-slate-950 p-4 rounded-2xl border border-slate-800 hover:border-brYellow cursor-pointer transition">
+                    <div class="text-3xl mb-2">👑</div>
+                    <h3 class="font-bold text-white text-sm mb-1">Torneio dos 8 Candidatos</h3>
+                    <p class="text-xs text-slate-400">Eliminatórias em mata-mata até a grande final presidencial.</p>
+                </div>
+
+                <div onclick="selectGameMode('MEME')" class="bg-slate-950 p-4 rounded-2xl border border-slate-800 hover:border-brYellow cursor-pointer transition">
+                    <div class="text-3xl mb-2">🎭</div>
+                    <h3 class="font-bold text-white text-sm mb-1">Modo Meme Caótico</h3>
+                    <p class="text-xs text-slate-400">Eventos aleatórios absurdos e frases icônicas da internet.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== 8. RANKING & CONQUISTAS ==================== -->
+        <section id="page-ranking" class="hidden w-full max-w-4xl bg-slate-900/90 rounded-3xl p-6 border-2 border-slate-700 shadow-2xl">
+            <div class="flex justify-between items-center mb-6 pb-3 border-b border-slate-800">
+                <div>
+                    <h2 class="text-2xl font-bold text-brYellow flex items-center gap-2">
+                        <i class="fas fa-medal"></i> CONQUISTAS & RANKING
+                    </h2>
+                    <p class="text-xs text-slate-400">Seu progresso político salvo localmente.</p>
+                </div>
+                <button onclick="showPage('menu')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-xl text-xs font-bold">
+                    <i class="fas fa-arrow-left mr-1"></i> VOLTAR
+                </button>
+            </div>
+
+            <!-- Stats Bar -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+                <div class="bg-slate-950 p-3 rounded-2xl border border-slate-800 text-center">
+                    <div class="text-xs text-slate-400">Nível do Candidato</div>
+                    <div id="statLevel" class="text-2xl font-bold text-brYellow">1</div>
+                </div>
+                <div class="bg-slate-950 p-3 rounded-2xl border border-slate-800 text-center">
+                    <div class="text-xs text-slate-400">XP Total</div>
+                    <div id="statXp" class="text-2xl font-bold text-emerald-400">0</div>
+                </div>
+                <div class="bg-slate-950 p-3 rounded-2xl border border-slate-800 text-center">
+                    <div class="text-xs text-slate-400">Vitórias em Debates</div>
+                    <div id="statWins" class="text-2xl font-bold text-blue-400">0</div>
+                </div>
+                <div class="bg-slate-950 p-3 rounded-2xl border border-slate-800 text-center">
+                    <div class="text-xs text-slate-400">K.O.s na Treta</div>
+                    <div id="statKos" class="text-2xl font-bold text-rose-400">0</div>
+                </div>
+            </div>
+
+            <h3 class="text-sm font-bold text-slate-300 mb-3 uppercase tracking-wider">Medalhas Eleitorais</h3>
+            <div id="achievementsGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <!-- Achievements injected by JS -->
+            </div>
+        </section>
+
+        <!-- ==================== 9. COMO JOGAR ==================== -->
+        <section id="page-howTo" class="hidden w-full max-w-4xl bg-slate-900/90 rounded-3xl p-6 border-2 border-slate-700 shadow-2xl">
+            <div class="flex justify-between items-center mb-6 pb-3 border-b border-slate-800">
+                <div>
+                    <h2 class="text-2xl font-bold text-brYellow flex items-center gap-2">
+                        <i class="fas fa-book-open"></i> GUIA RÁPIDO DO JOGO
+                    </h2>
+                    <p class="text-xs text-slate-400">Aprenda a dominar o palco e o ringue.</p>
+                </div>
+                <button onclick="showPage('menu')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-xl text-xs font-bold">
+                    <i class="fas fa-arrow-left mr-1"></i> VOLTAR
+                </button>
+            </div>
+
+            <div class="space-y-4 text-xs font-inter text-slate-300 leading-relaxed">
+                <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800">
+                    <h3 class="text-sm font-bold text-emerald-400 mb-1">1. FASE DE DEBATE</h3>
+                    <p>Durante o debate, você e seu oponente alternam ações. Cada escolha (Argumento Coerente, Pergunta Cabeluda, Provocação Meme) afeta a pontuação técnica e o humor da plateia. Quanto mais alta a aprovação popular, maior o bônus de energia na batalha!</p>
+                </div>
+
+                <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800">
+                    <h3 class="text-sm font-bold text-blue-400 mb-1">2. FASE DE BATALHA ARCADE</h3>
+                    <p>Mova seu personagem com A/D ou setas (ou botões virtuais no celular). Use J (Soco), K (Chute) e carregue a barra de especial para soltar o golpe supremo do candidato quando estiver 100% cheia!</p>
+                </div>
+
+                <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800">
+                    <h3 class="text-sm font-bold text-brYellow mb-1">3. EQUILÍBRIO POLÍTICO</h3>
+                    <p>O jogo é 100% neutro e humorístico. Escolher a Esquerda 🔴 ou a Direita 🔵 é uma opção estética e de roleplay. Nenhum lado possui atributos superiores aos do outro.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== 10. CONFIGURAÇÕES ==================== -->
+        <section id="page-settings" class="hidden w-full max-w-4xl bg-slate-900/90 rounded-3xl p-6 border-2 border-slate-700 shadow-2xl">
+            <div class="flex justify-between items-center mb-6 pb-3 border-b border-slate-800">
+                <div>
+                    <h2 class="text-2xl font-bold text-brYellow flex items-center gap-2">
+                        <i class="fas fa-sliders"></i> CONFIGURAÇÕES & SUPABASE ⚡
+                    </h2>
+                    <p class="text-xs text-slate-400">Ajuste áudio, dados e credenciais multiplayer com Supabase.</p>
+                </div>
+                <button onclick="showPage('menu')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-xl text-xs font-bold">
+                    <i class="fas fa-arrow-left mr-1"></i> VOLTAR
+                </button>
+            </div>
+
+            <div class="space-y-4">
+                <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800">
+                    <h3 class="text-sm font-bold text-emerald-400 mb-2 flex items-center gap-2">
+                        <i class="fas fa-bolt text-brYellow"></i> Credenciais Supabase (Multiplayer em Nuvem)
+                    </h3>
+                    <p class="text-xs text-slate-400 mb-3">Insira as chaves do seu projeto no Supabase para sincronizar salas online entre jogadores de verdade.</p>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-300 mb-1">SUPABASE URL</label>
+                            <input id="supabaseUrlInput" type="text" placeholder="https://seu-projeto.supabase.co" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-xs font-mono text-emerald-400 focus:outline-none focus:border-brYellow">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-300 mb-1">SUPABASE ANON KEY</label>
+                            <input id="supabaseKeyInput" type="password" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-xs font-mono text-emerald-400 focus:outline-none focus:border-brYellow">
+                        </div>
+                    </div>
+                    <button onclick="saveSupabaseConfig()" class="mt-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-4 rounded-xl text-xs shadow-lg">
+                        SALVAR CHAVES SUPABASE
+                    </button>
+                </div>
+
+                <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800 flex justify-between items-center">
+                    <div>
+                        <div class="text-sm font-bold text-white">Resetar Dados Locais</div>
+                        <div class="text-xs text-slate-400">Limpa nível, conquistas e personagem personalizado salvos no navegador.</div>
+                    </div>
+                    <button onclick="resetGameData()" class="bg-rose-900 hover:bg-rose-800 text-rose-200 text-xs font-bold py-2 px-4 rounded-xl">
+                        RESETAR TUDO
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== 11. GUIA GITHUB PAGES ==================== -->
+        <section id="page-github" class="hidden w-full max-w-4xl bg-slate-900/90 rounded-3xl p-6 border-2 border-slate-700 shadow-2xl">
+            <div class="flex justify-between items-center mb-6 pb-3 border-b border-slate-800">
+                <div>
+                    <h2 class="text-2xl font-bold text-brYellow flex items-center gap-2">
+                        <i class="fab fa-github"></i> COMO HOSPEDAR NO GITHUB PAGES
+                    </h2>
+                    <p class="text-xs text-slate-400">Passo a passo para publicar o jogo gratuitamente na web.</p>
+                </div>
+                <button onclick="showPage('menu')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-xl text-xs font-bold">
+                    <i class="fas fa-arrow-left mr-1"></i> VOLTAR
+                </button>
+            </div>
+
+            <div class="space-y-3 text-xs font-inter text-slate-300 leading-relaxed">
+                <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800">
+                    <span class="font-bold text-emerald-400 block mb-1">Passo 1: Criar o Repositório</span>
+                    Crie um repositório público no GitHub chamado <code class="text-brYellow bg-slate-900 px-2 py-0.5 rounded">debate-politico-br</code>.
+                </div>
+                <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800">
+                    <span class="font-bold text-emerald-400 block mb-1">Passo 2: Adicionar o Arquivo</span>
+                    Salve este código como <code class="text-brYellow bg-slate-900 px-2 py-0.5 rounded">index.html</code> na raiz do repositório.
+                </div>
+                <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800">
+                    <span class="font-bold text-emerald-400 block mb-1">Passo 3: Ativar o GitHub Pages</span>
+                    Vá em <b>Settings</b> &gt; <b>Pages</b> no GitHub. Selecione a branch <code class="text-brYellow bg-slate-900 px-2 py-0.5 rounded">main</code> e clique em <b>Save</b>. Seu jogo estará no ar em poucos segundos!
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="w-full bg-slate-950 border-t border-slate-800 p-3 text-center text-slate-500 text-xs font-inter">
+        DEBATE POLÍTICO BR © 2026 — Jogo educativo e satírico sem fins lucrativos.
+    </footer>
+
+    <!-- AUDIO SYNTHESIZER & GAME LOGIC ENGINE -->
+    <script>
+        /* ==========================================================================
+           GAME STATE & ROUTING ENGINE
+           ========================================================================== */
+        let gameState = {
+            audioEnabled: true,
+            audioCtx: null,
+            player: {
+                id: 'custom',
+                name: 'Candidato Zé',
+                partyTag: 'PBR',
+                partyName: 'Partido do Brasil',
+                side: 'ESQUERDA',
+                gender: 'M',
+                skinColor: '#f6ad55',
+                hairColor: '#2d3748',
+                suitColor: '#1e293b',
+                hairStyle: 'topete',
+                accessory: 'none',
+                expression: 'normal',
+                quote: 'Pelo futuro do Brasil e pela voz do povo!'
+            },
+            opponent: null,
+            mode: 'DEBATE_FIGHT',
+            debate: {
+                round: 1,
+                maxRounds: 3,
+                topic: 'Educação e Economia',
+                p1Score: 50,
+                p2Score: 50,
+                crowdMood: 50,
+                timeLeft: 45,
+                timerInterval: null
+            },
+            fight: {
+                active: false,
+                p1Hp: 100,
+                p2Hp: 100,
+                p1Special: 0,
+                p2Special: 0
+            },
+            stats: {
+                level: 1,
+                xp: 0,
+                wins: 0,
+                kos: 0
+            },
+            room: null
+        };
+
+        function adjustColor(hex, amt) {
+            if (!hex || hex[0] !== '#') return hex || '#888888';
+            let num = parseInt(hex.slice(1), 16);
+            let r = Math.max(0, Math.min(255, (num >> 16) + amt));
+            let g = Math.max(0, Math.min(255, ((num >> 8) & 0x00FF) + amt));
+            let b = Math.max(0, Math.min(255, (num & 0x0000FF) + amt));
+            return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+        }
+
+        function showPage(pageId) {
+            playSfx('click');
+            const sections = document.querySelectorAll('main > section');
+            sections.forEach(sec => sec.classList.add('hidden'));
+
+            const target = document.getElementById('page-' + pageId);
+            if (target) {
+                target.classList.remove('hidden');
+            }
+
+            if (pageId === 'customizer') {
+                updateCustomizer();
+            } else if (pageId === 'roster') {
+                renderRoster();
+            } else if (pageId === 'ranking') {
+                renderRankingAndAchievements();
+            }
+            updateProfilePill();
+        }
+
+        function toggleAudio() {
+            gameState.audioEnabled = !gameState.audioEnabled;
+            const icon = document.getElementById('audioIcon');
+            if (icon) {
+                icon.className = gameState.audioEnabled ? "fas fa-volume-up text-lg" : "fas fa-volume-mute text-lg text-rose-500";
+            }
+            playSfx('click');
+        }
+
+        function playSfx(type) {
+            if (!gameState.audioEnabled) return;
+            try {
+                if (!gameState.audioCtx) {
+                    gameState.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                const ctx = gameState.audioCtx;
+                if (ctx.state === 'suspended') ctx.resume();
+
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+
+                const now = ctx.currentTime;
+                if (type === 'click') {
+                    osc.frequency.setValueAtTime(400, now);
+                    osc.frequency.exponentialRampToValueAtTime(800, now + 0.05);
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+                    osc.start(now);
+                    osc.stop(now + 0.05);
+                } else if (type === 'punch') {
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(150, now);
+                    osc.frequency.exponentialRampToValueAtTime(30, now + 0.12);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+                    osc.start(now);
+                    osc.stop(now + 0.12);
+                } else if (type === 'special') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(200, now);
+                    osc.frequency.exponentialRampToValueAtTime(800, now + 0.3);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                } else if (type === 'cheer') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(350, now);
+                    osc.frequency.linearRampToValueAtTime(600, now + 0.25);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+                    osc.start(now);
+                    osc.stop(now + 0.25);
+                }
+            } catch(e) {}
+        }
+
+        function updateProfilePill() {
+            const pill = document.getElementById('userProfilePill');
+            if (!pill) return;
+            pill.classList.remove('hidden');
+
+            const sideInd = document.getElementById('pillSideIndicator');
+            if (sideInd) {
+                sideInd.className = `w-3 h-3 rounded-full ${gameState.player.side === 'ESQUERDA' ? 'bg-red-500' : 'bg-blue-500'}`;
+            }
+            const userName = document.getElementById('pillUserName');
+            if (userName) userName.innerText = gameState.player.name;
+            const userLvl = document.getElementById('pillUserLevel');
+            if (userLvl) userLvl.innerText = `Nível ${gameState.stats.level}`;
+        }
+
+        /* ==========================================================================
+           CUSTOMIZER & ROSTER LOGIC
+           ========================================================================== */
+        let currentCustomPose = 'normal';
+
+        function selectPoliticalSide(side) {
+            playSfx('click');
+            gameState.player.side = side;
+            const btnE = document.getElementById('sideBtnEsquerda');
+            const btnD = document.getElementById('sideBtnDireita');
+            if (side === 'ESQUERDA') {
+                btnE.className = "p-3 rounded-2xl border-2 border-red-500 bg-red-950/80 text-red-300 font-bold flex items-center justify-center gap-1 transition text-xs shadow-lg";
+                btnD.className = "p-3 rounded-2xl border-2 border-blue-500/30 bg-slate-800/60 text-slate-400 font-bold flex items-center justify-center gap-1 hover:bg-blue-900/40 transition text-xs";
+            } else {
+                btnE.className = "p-3 rounded-2xl border-2 border-red-500/30 bg-slate-800/60 text-slate-400 font-bold flex items-center justify-center gap-1 hover:bg-red-900/40 transition text-xs";
+                btnD.className = "p-3 rounded-2xl border-2 border-blue-500 bg-blue-950/80 text-blue-300 font-bold flex items-center justify-center gap-1 transition text-xs shadow-lg";
+            }
+            updateCustomizer();
+        }
+
+        function selectGender(g) {
+            playSfx('click');
+            gameState.player.gender = g;
+            const btnM = document.getElementById('genderBtnM');
+            const btnF = document.getElementById('genderBtnF');
+            if (g === 'M') {
+                btnM.className = "p-3 rounded-2xl border-2 border-blue-500 bg-blue-950/80 text-blue-300 font-bold flex items-center justify-center gap-1 transition text-xs shadow-lg";
+                btnF.className = "p-3 rounded-2xl border-2 border-slate-700 bg-slate-800 text-slate-400 font-bold flex items-center justify-center gap-1 hover:bg-slate-700 transition text-xs";
+            } else {
+                btnM.className = "p-3 rounded-2xl border-2 border-slate-700 bg-slate-800 text-slate-400 font-bold flex items-center justify-center gap-1 hover:bg-slate-700 transition text-xs";
+                btnF.className = "p-3 rounded-2xl border-2 border-pink-500 bg-pink-950/80 text-pink-300 font-bold flex items-center justify-center gap-1 transition text-xs shadow-lg";
+            }
+            updateCustomizer();
+        }
+
+        function previewPose(pose) {
+            playSfx('click');
+            currentCustomPose = pose;
+            updateCustomizer();
+        }
+
+        function updateCustomizer() {
+            const name = document.getElementById('customNameInput').value || 'Candidato';
+            const tag = document.getElementById('customPartyTagInput').value || 'PBR';
+            const pName = document.getElementById('customPartyNameInput').value || 'Partido BR';
+            const skin = document.getElementById('customSkinColorInput').value;
+            const hairC = document.getElementById('customHairColorInput').value;
+            const suitC = document.getElementById('customSuitColorInput').value;
+            const hairS = document.getElementById('customHairSelect').value;
+            const acc = document.getElementById('customAccessorySelect').value;
+            const expr = document.getElementById('customExpressionSelect').value;
+
+            gameState.player.name = name;
+            gameState.player.partyTag = tag.toUpperCase();
+            gameState.player.partyName = pName;
+            gameState.player.skinColor = skin;
+            gameState.player.hairColor = hairC;
+            gameState.player.suitColor = suitC;
+            gameState.player.hairStyle = hairS;
+            gameState.player.accessory = acc;
+            gameState.player.expression = expr;
+
+            document.getElementById('customPartyTagBadge').innerText = gameState.player.partyTag;
+            document.getElementById('customPartyNameLabel').innerText = gameState.player.partyName;
+            document.getElementById('customSideBadge').innerText = gameState.player.side === 'ESQUERDA' ? '🔴 ESQ' : '🔵 DIR';
+            document.getElementById('customSideBadge').className = gameState.player.side === 'ESQUERDA' ? 'text-xs font-bold text-red-400' : 'text-xs font-bold text-blue-400';
+
+            const canvas = document.getElementById('customizerCanvas');
+            if (canvas) {
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                renderRealisticAvatar(ctx, gameState.player, {
+                    x: 0, y: 0, width: canvas.width, height: canvas.height, pose: currentCustomPose
+                });
+            }
+        }
+
+        function saveCustomCharacter() {
+            playSfx('cheer');
+            localStorage.setItem('debate_br_player', JSON.stringify(gameState.player));
+            updateProfilePill();
+            alert('Candidato salvo com sucesso!');
+            showPage('menu');
+        }
+
+        /* ==========================================================================
+           ROSTER DATA & FUNCTIONS
+           ========================================================================== */
+        const ROSTER = [
+            { 
+                id: 'erika', 
+                name: 'Erika Hilton', 
+                partyTag: 'PSOL', 
+                partyName: 'Partido Socialismo e Liberdade', 
+                side: 'ESQUERDA', 
+                gender: 'F', 
+                color: '#e53e3e', 
+                skinColor: '#8d5524', 
+                suitColor: '#d53f8c', 
+                hairStyle: 'longo', 
+                hairColor: '#1a202c', 
+                accessory: 'oculos', 
+                quote: 'Com a cabeça erguida, muita elegância e a força das trabalhadoras deste país!' 
+            },
+            { 
+                id: 'pavanato', 
+                name: 'Lucas Pavanato', 
+                partyTag: 'PL', 
+                partyName: 'Partido Liberal', 
+                side: 'DIREITA', 
+                gender: 'M', 
+                color: '#3182ce', 
+                skinColor: '#f6ad55', 
+                suitColor: '#1e3a8a', 
+                hairStyle: 'curto', 
+                hairColor: '#2d3748', 
+                accessory: 'none', 
+                quote: 'Eu vim aqui fazer a pergunta que ninguém tem coragem de fazer!' 
+            },
+            { 
+                id: 'nikolas', 
+                name: 'Nikolas Ferreira', 
+                partyTag: 'PL', 
+                partyName: 'Partido Liberal', 
+                side: 'DIREITA', 
+                gender: 'M', 
+                color: '#3182ce', 
+                skinColor: '#f6ad55', 
+                suitColor: '#1e293b', 
+                hairStyle: 'topete', 
+                hairColor: '#3b2314', 
+                accessory: 'constituicao', 
+                quote: 'A esquerda pira porque a internet não aceita mais a narrativa de vocês!' 
+            },
+            { 
+                id: 'eduarda', 
+                name: 'Eduarda Campopiano', 
+                partyTag: 'NOVO', 
+                partyName: 'Partido Novo', 
+                side: 'DIREITA', 
+                gender: 'F', 
+                color: '#dd6b20', 
+                skinColor: '#ffdbac', 
+                suitColor: '#dd6b20', 
+                hairStyle: 'longo', 
+                hairColor: '#b7791f', 
+                accessory: 'dossie', 
+                quote: 'O brasileiro trabalha meio ano só para pagar imposto! Menos Estado e mais liberdade!' 
+            },
+            { 
+                id: 'caiado', 
+                name: 'Ronaldo Caiado', 
+                partyTag: 'UNIÃO', 
+                partyName: 'União Brasil', 
+                side: 'DIREITA', 
+                gender: 'M', 
+                color: '#2b6cb0', 
+                skinColor: '#f6ad55', 
+                suitColor: '#2d3748', 
+                hairStyle: 'classico', 
+                hairColor: '#e2e8f0', 
+                accessory: 'none', 
+                quote: 'Aqui no meu Estado bandido não se cria, a polícia atua com tolerância zero!' 
+            },
+            { 
+                id: 'augusto', 
+                name: 'Augusto Cury', 
+                partyTag: 'PGE', 
+                partyName: 'Partido da Gestão Emocional', 
+                side: 'ESQUERDA', 
+                gender: 'M', 
+                color: '#38a169', 
+                skinColor: '#f6ad55', 
+                suitColor: '#2b6cb0', 
+                hairStyle: 'classico', 
+                hairColor: '#4a5568', 
+                accessory: 'oculos', 
+                quote: 'Quem não governa os próprios pensamentos jamais governará uma nação!' 
+            },
+            { 
+                id: 'lula', 
+                name: 'Lula', 
+                partyTag: 'PT', 
+                partyName: 'Partido dos Trabalhadores', 
+                side: 'ESQUERDA', 
+                gender: 'M', 
+                color: '#e53e3e', 
+                skinColor: '#e0ac69', 
+                suitColor: '#2d3748', 
+                hairStyle: 'careca', 
+                hairColor: '#e2e8f0', 
+                accessory: 'faixa', 
+                quote: 'Nunca antes na história deste país o trabalhador voltou a comer a sua picanha!' 
+            },
+            { 
+                id: 'renan', 
+                name: 'Renan Santos', 
+                partyTag: 'MBL', 
+                partyName: 'Movimento Brasil Livre', 
+                side: 'DIREITA', 
+                gender: 'M', 
+                color: '#ecc94b', 
+                skinColor: '#f6ad55', 
+                suitColor: '#1a202c', 
+                hairStyle: 'topete', 
+                hairColor: '#2d3748', 
+                accessory: 'detergente', 
+                quote: 'Nós vamos desmantelar o sistema corrupto e passar a limpo a política nacional!' 
+            },
+            { 
+                id: 'capacete', 
+                name: 'O Candidato do Capacete', 
+                partyTag: 'PBR', 
+                partyName: 'Partido do Asfalto', 
+                side: 'DIREITA', 
+                gender: 'M', 
+                color: '#dd6b20', 
+                skinColor: '#f6ad55', 
+                suitColor: '#c05621', 
+                hairStyle: 'capacete', 
+                hairColor: '#ecc94b', 
+                accessory: 'capacete', 
+                quote: 'Obra sem fiscalização é dinheiro do povo jogado fora!' 
+            },
+            { 
+                id: 'pix', 
+                name: 'O Rei do Pix', 
+                partyTag: 'PIX', 
+                partyName: 'Partido Digital', 
+                side: 'DIREITA', 
+                gender: 'M', 
+                color: '#319795', 
+                skinColor: '#f6ad55', 
+                suitColor: '#234e52', 
+                hairStyle: 'topete', 
+                hairColor: '#2b6cb0', 
+                accessory: 'faixa', 
+                quote: 'Transferência instantânea de propostas e pix direto no bolso do eleitor!' 
+            }
+        ];
+
+        function renderRoster() {
+            const grid = document.getElementById('rosterGrid');
+            if (!grid) return;
+            grid.innerHTML = '';
+
+            ROSTER.forEach(char => {
+                const card = document.createElement('div');
+                card.className = "bg-slate-950 p-4 rounded-2xl border-2 border-slate-800 hover:border-brYellow transition flex flex-col items-center justify-between text-center gap-3";
+
+                const canvasId = `rosterCanvas_${char.id}`;
+                card.innerHTML = `
+                    <div class="relative w-full flex justify-center">
+                        <canvas id="${canvasId}" width="160" height="180" class="bg-slate-900 rounded-xl border border-slate-800"></canvas>
+                        <span class="absolute top-2 right-2 text-[10px] font-black px-2 py-0.5 rounded ${char.side === 'ESQUERDA' ? 'bg-red-600 text-white' : 'bg-blue-600 text-white'}">${char.partyTag}</span>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-white text-sm">${char.name}</h3>
+                        <p class="text-[11px] text-slate-400 font-inter line-clamp-1 mb-1">${char.partyName}</p>
+                        <p class="text-[10px] text-brYellow italic font-inter line-clamp-2">"${char.quote}"</p>
+                    </div>
+                    <button onclick="selectRosterChar('${char.id}')" class="w-full bg-slate-800 hover:bg-brYellow hover:text-slate-950 text-slate-200 text-xs font-bold py-2 rounded-xl transition">
+                        ESCOLHER CANDIDATO
+                    </button>
+                `;
+                grid.appendChild(card);
+
+                setTimeout(() => {
+                    const c = document.getElementById(canvasId);
+                    if (c) {
+                        const ctx = c.getContext('2d');
+                        renderRealisticAvatar(ctx, char, { x: 0, y: 0, width: c.width, height: c.height, pose: 'normal' });
+                    }
+                }, 10);
+            });
+        }
+
+        function selectRosterChar(charId) {
+            playSfx('cheer');
+            const selected = ROSTER.find(c => c.id === charId);
+            if (selected) {
+                gameState.player = { ...selected };
+                document.getElementById('customNameInput').value = selected.name;
+                document.getElementById('customPartyTagInput').value = selected.partyTag;
+                document.getElementById('customPartyNameInput').value = selected.partyName;
+                document.getElementById('customSkinColorInput').value = selected.skinColor;
+                document.getElementById('customHairColorInput').value = selected.hairColor;
+                document.getElementById('customSuitColorInput').value = selected.suitColor;
+                document.getElementById('customHairSelect').value = selected.hairStyle;
+                document.getElementById('customAccessorySelect').value = selected.accessory;
+                selectPoliticalSide(selected.side);
+                selectGender(selected.gender || 'M');
+                updateProfilePill();
+                alert(`Você selecionou ${selected.name} (${selected.partyTag})!`);
+                showPage('menu');
+            }
+        }
+
+        /* ==========================================================================
+           DEBATE ENGINE
+           ========================================================================== */
+        function startSinglePlayer() {
+            playSfx('click');
+            const available = ROSTER.filter(r => r.id !== gameState.player.id);
+            gameState.opponent = available[Math.floor(Math.random() * available.length)] || ROSTER[0];
+            startDebate();
+        }
+
+        function startDebate() {
+            showPage('debate');
+            gameState.debate.round = 1;
+            gameState.debate.p1Score = 50;
+            gameState.debate.p2Score = 50;
+            gameState.debate.crowdMood = 50;
+            gameState.debate.timeLeft = 45;
+
+            document.getElementById('debateP1Name').innerText = gameState.player.name;
+            document.getElementById('debateP1PartyBadge').innerText = gameState.player.partyTag;
+            document.getElementById('debateP2Name').innerText = gameState.opponent.name;
+            document.getElementById('debateP2PartyBadge').innerText = gameState.opponent.partyTag;
+            document.getElementById('debateTopicTitle').innerText = gameState.debate.topic;
+
+            updateDebateHUD();
+            renderDebateStage('normal', 'normal');
+
+            const log = document.getElementById('debateLogBox');
+            if (log) {
+                log.innerHTML = `<div class="text-slate-400 italic">--- O Mediador abre o debate entre ${gameState.player.name} (${gameState.player.partyTag}) e ${gameState.opponent.name} (${gameState.opponent.partyTag}). ---</div>`;
+            }
+
+            if (gameState.debate.timerInterval) clearInterval(gameState.debate.timerInterval);
+            gameState.debate.timerInterval = setInterval(() => {
+                gameState.debate.timeLeft--;
+                const timerText = document.getElementById('debateTimerText');
+                if (timerText) timerText.innerText = `${gameState.debate.timeLeft}s para discursar`;
+                if (gameState.debate.timeLeft <= 0) {
+                    clearInterval(gameState.debate.timerInterval);
+                    submitFreeTextArgument("Tempo esgotado! Prometo agir com rapidez e eficiência!");
+                }
+            }, 1000);
+        }
+
+        function updateDebateHUD() {
+            document.getElementById('debateRoundBadge').innerText = `RODADA ${gameState.debate.round} DE ${gameState.debate.maxRounds}`;
+            document.getElementById('debateP1Score').innerText = `Aprovação: ${gameState.debate.p1Score}%`;
+            document.getElementById('debateP2Score').innerText = `Aprovação: ${gameState.debate.p2Score}%`;
+
+            const bar = document.getElementById('crowdMoodBar');
+            if (bar) bar.style.width = `${gameState.debate.crowdMood}%`;
+
+            const moodText = document.getElementById('crowdMoodText');
+            if (moodText) {
+                if (gameState.debate.crowdMood > 65) moodText.innerText = "Apoiando Você! 🔥";
+                else if (gameState.debate.crowdMood < 35) moodText.innerText = "Apoiando Opositor! ❄️";
+                else moodText.innerText = "Equilibrado";
+            }
+        }
+
+        function renderDebateStage(p1Pose = 'normal', p2Pose = 'normal', p1Speech = '', p2Speech = '') {
+            const canvas = document.getElementById('debateStageCanvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            canvas.width = canvas.parentElement.clientWidth || 800;
+            canvas.height = canvas.parentElement.clientHeight || 320;
+
+            const w = canvas.width;
+            const h = canvas.height;
+
+            ctx.fillStyle = '#090d16';
+            ctx.fillRect(0, 0, w, h);
+
+            ctx.fillStyle = '#1e293b';
+            for (let i = 0; i < w; i += 30) {
+                ctx.beginPath();
+                ctx.arc(i + 15, h - 20, 18, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            ctx.fillStyle = '#1e293b';
+            ctx.fillRect(w * 0.1, h - 100, w * 0.25, 100);
+            ctx.fillRect(w * 0.65, h - 100, w * 0.25, 100);
+
+            ctx.fillStyle = '#009c3b';
+            ctx.fillRect(w * 0.1, h - 100, w * 0.25, 8);
+            ctx.fillRect(w * 0.65, h - 100, w * 0.25, 8);
+
+            drawAvatarAt(ctx, gameState.player, w * 0.225, h - 100, p1Pose);
+            drawAvatarAt(ctx, gameState.opponent, w * 0.775, h - 100, p2Pose);
+
+            ctx.fillStyle = '#64748b';
+            ctx.fillRect(w * 0.225 - 4, h - 140, 8, 40);
+            ctx.fillRect(w * 0.775 - 4, h - 140, 8, 40);
+
+            if (p1Speech) drawSpeechBubble(ctx, w * 0.225, h - 220, p1Speech, true);
+            if (p2Speech) drawSpeechBubble(ctx, w * 0.775, h - 220, p2Speech, false);
+        }
+
+        function drawAvatarAt(ctx, charData, cx, bottomY, pose) {
+            if (!charData) return;
+            const w = 180;
+            const h = 210;
+            const x = cx - w / 2;
+            const y = bottomY - h + 30;
+            renderRealisticAvatar(ctx, charData, { x, y, width: w, height: h, pose });
+        }
+
+        function drawSpeechBubble(ctx, x, y, text, isLeft) {
+            ctx.fillStyle = '#ffffff';
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 2;
+
+            const bw = 220;
+            const bh = 60;
+            const bx = isLeft ? x - 20 : x - bw + 20;
+            const by = y - bh;
+
+            ctx.beginPath();
+            ctx.roundRect(bx, by, bw, bh, 12);
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(x, y - 5);
+            ctx.lineTo(x + (isLeft ? 15 : -15), y - 20);
+            ctx.lineTo(x + (isLeft ? 30 : -30), y - 20);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.fillStyle = '#0f172a';
+            ctx.font = 'bold 11px Inter, sans-serif';
+            ctx.textAlign = 'center';
+
+            const words = text.split(' ');
+            let line = '';
+            let lineY = by + 22;
+            for (let i = 0; i < words.length; i++) {
+                let testLine = line + words[i] + ' ';
+                if (ctx.measureText(testLine).width > bw - 20 && i > 0) {
+                    ctx.fillText(line, bx + bw / 2, lineY);
+                    line = words[i] + ' ';
+                    lineY += 15;
+                    if (lineY > by + bh - 10) break;
+                } else {
+                    line = testLine;
+                }
+            }
+            ctx.fillText(line, bx + bw / 2, lineY);
+        }
+
+        function updateArgCounter() {
+            const val = document.getElementById('freeTextArgumentInput').value || '';
+            document.getElementById('argCharCounter').innerText = `${val.length} / 280 caracteres`;
+        }
+
+        function insertQuickPhrase(phrase) {
+            playSfx('click');
+            const input = document.getElementById('freeTextArgumentInput');
+            if (input) {
+                input.value = phrase;
+                updateArgCounter();
+            }
+        }
+
+        function submitFreeTextArgument(forcedText) {
+            const input = document.getElementById('freeTextArgumentInput');
+            const text = forcedText || (input ? input.value.trim() : '');
+            if (!text) {
+                alert('Por favor, digite um argumento para o debate!');
+                return;
+            }
+            if (input) input.value = '';
+            updateArgCounter();
+            if (gameState.debate.timerInterval) clearInterval(gameState.debate.timerInterval);
+
+            playSfx('cheer');
+
+            const lower = text.toLowerCase();
+            let gain = 5;
+            if (lower.includes('saúde') || lower.includes('educação') || lower.includes('imposto') || lower.includes('transparência') || lower.includes('emprego') || lower.includes('proposta')) {
+                gain += 10;
+            }
+            if (text.length > 50) gain += 5;
+
+            gameState.debate.p1Score = Math.min(100, gameState.debate.p1Score + gain);
+            gameState.debate.p2Score = Math.max(0, gameState.debate.p2Score - Math.floor(gain / 2));
+            gameState.debate.crowdMood = Math.min(100, gameState.debate.crowdMood + gain);
+
+            const opQuote = gameState.opponent.quote || "Tenho dados concretos para desmentir essa afirmação!";
+
+            renderDebateStage('talk', 'surpreso', text, opQuote);
+            updateDebateHUD();
+
+            const log = document.getElementById('debateLogBox');
+            if (log) {
+                log.innerHTML += `<div class="text-emerald-400 font-bold">🗣️ ${gameState.player.name}: "${text}"</div>`;
+                log.innerHTML += `<div class="text-rose-400 font-bold">🤖 ${gameState.opponent.name}: "${opQuote}"</div>`;
+                log.scrollTop = log.scrollHeight;
+            }
+
+            const popup = document.getElementById('debateReactionPopup');
+            if (popup) {
+                popup.classList.remove('hidden');
+                popup.innerText = gain > 12 ? 'MITOU! 🔥' : 'APLAUSOS! 👏';
+                setTimeout(() => popup.classList.add('hidden'), 1800);
+            }
+
+            setTimeout(() => {
+                if (gameState.debate.round < gameState.debate.maxRounds) {
+                    gameState.debate.round++;
+                    gameState.debate.timeLeft = 45;
+                    updateDebateHUD();
+                    renderDebateStage('normal', 'normal');
+                    gameState.debate.timerInterval = setInterval(() => {
+                        gameState.debate.timeLeft--;
+                        const timerText = document.getElementById('debateTimerText');
+                        if (timerText) timerText.innerText = `${gameState.debate.timeLeft}s para discursar`;
+                        if (gameState.debate.timeLeft <= 0) {
+                            clearInterval(gameState.debate.timerInterval);
+                            submitFreeTextArgument("O tempo é escasso, mas minhas propostas são diretas!");
+                        }
+                    }, 1000);
+                } else {
+                    finishDebate();
+                }
+            }, 2500);
+        }
+
+        function finishDebate() {
+            playSfx('cheer');
+            if (gameState.debate.p1Score >= gameState.debate.p2Score) {
+                gameState.stats.wins++;
+                gameState.stats.xp += 100;
+                if (gameState.stats.xp >= gameState.stats.level * 200) {
+                    gameState.stats.level++;
+                }
+                alert(`FIM DO DEBATE! Você venceu a disputa técnica (${gameState.debate.p1Score}% a ${gameState.debate.p2Score}%)! Premiação: +100 XP.`);
+            } else {
+                alert(`FIM DO DEBATE! Seu oponente teve maior aprovação (${gameState.debate.p2Score}% a ${gameState.debate.p1Score}%). Hora da revanche no ringue!`);
+            }
+
+            if (gameState.mode === 'DEBATE_FIGHT') {
+                startFight();
+            } else {
+                showPage('menu');
+            }
+        }
+
+        /* ==========================================================================
+           REALISTIC AVATAR ENGINE
+           ========================================================================== */
+        function renderRealisticAvatar(ctx, charData, opts) {
+            const x = opts.x || 0;
+            const y = opts.y || 0;
+            const w = opts.width || 200;
+            const h = opts.height || 240;
+            const pose = opts.pose || 'normal';
+
+            if (!ctx.roundRect) {
+                ctx.roundRect = function(rx, ry, rw, rh, r) { ctx.rect(rx, ry, rw, rh); };
+            }
+
+            const isFemale = charData.gender === 'F' || charData.gender === 'feminino';
+
+            const skin = charData.skinColor || '#f6ad55';
+            const skinShadow = adjustColor(skin, -35);
+            const skinHighlight = adjustColor(skin, 25);
+
+            const suit = charData.suitColor || (charData.side === 'ESQUERDA' ? '#8c1d1d' : '#1e3a8a');
+            const suitShadow = adjustColor(suit, -40);
+            const suitHighlight = adjustColor(suit, 30);
+
+            const hair = charData.hairColor || '#2d3748';
+            const hairHighlight = adjustColor(hair, 35);
+            const hairShadow = adjustColor(hair, -30);
+
+            const expression = charData.expression || 'normal';
+
+            const cx = x + w / 2;
+            const cy = y + h * 0.42;
+            const headR = w * 0.155;
+            const headY = cy - headR * 0.3;
+
+            const auraColor = charData.side === 'ESQUERDA' ? 'rgba(239, 68, 68, 0.12)' : 'rgba(59, 130, 246, 0.12)';
+            const auraGrad = ctx.createRadialGradient(cx, headY, headR * 0.5, cx, headY, w * 0.6);
+            auraGrad.addColorStop(0, auraColor);
+            auraGrad.addColorStop(1, 'transparent');
+            ctx.fillStyle = auraGrad;
+            ctx.fillRect(x, y, w, h);
+
+            const style = charData.hairStyle || 'curto';
+            if (style === 'longo') {
+                ctx.fillStyle = hairShadow;
+                ctx.fillRect(cx - headR * 1.15, headY - headR * 0.2, headR * 0.45, headR * 1.8);
+                ctx.fillRect(cx + headR * 0.7, headY - headR * 0.2, headR * 0.45, headR * 1.8);
+            }
+
+            const neckW = isFemale ? headR * 0.22 : headR * 0.28;
+            const shoulderW = isFemale ? w * 0.31 : w * 0.35;
+
+            ctx.fillStyle = skinShadow;
+            ctx.fillRect(cx - neckW, headY + headR * 0.7, neckW * 2, headR * 0.6);
+
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.moveTo(cx - neckW * 1.5, headY + headR * 0.95);
+            ctx.lineTo(cx + neckW * 1.5, headY + headR * 0.95);
+            ctx.lineTo(cx, headY + headR * (isFemale ? 1.35 : 1.5));
+            ctx.closePath();
+            ctx.fill();
+
+            if (!isFemale) {
+                const tieColor = charData.side === 'ESQUERDA' ? '#dc2626' : '#2563eb';
+                ctx.fillStyle = tieColor;
+                ctx.beginPath();
+                ctx.moveTo(cx - headR * 0.1, headY + headR * 0.95);
+                ctx.lineTo(cx + headR * 0.1, headY + headR * 0.95);
+                ctx.lineTo(cx + headR * 0.15, headY + headR * 1.8);
+                ctx.lineTo(cx, headY + headR * 2.1);
+                ctx.lineTo(cx - headR * 0.15, headY + headR * 1.8);
+                ctx.closePath();
+                ctx.fill();
+            }
+
+            const suitGrad = ctx.createLinearGradient(cx - shoulderW, y, cx + shoulderW, y);
+            suitGrad.addColorStop(0, suitShadow);
+            suitGrad.addColorStop(0.5, suit);
+            suitGrad.addColorStop(1, suitShadow);
+            ctx.fillStyle = suitGrad;
+
+            ctx.beginPath();
+            ctx.moveTo(cx - shoulderW * 1.15, y + h);
+            ctx.lineTo(cx - shoulderW, headY + headR * 1.05);
+            ctx.lineTo(cx - neckW * 1.2, headY + headR * 0.95);
+            ctx.lineTo(cx + neckW * 1.2, headY + headR * 0.95);
+            ctx.lineTo(cx + shoulderW, headY + headR * 1.05);
+            ctx.lineTo(cx + shoulderW * 1.15, y + h);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.fillStyle = suitHighlight;
+            ctx.beginPath();
+            ctx.moveTo(cx - shoulderW * 0.8, headY + headR * 1.1);
+            ctx.lineTo(cx - neckW, headY + headR * 0.95);
+            ctx.lineTo(cx - neckW * 0.3, headY + headR * 1.7);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.moveTo(cx + shoulderW * 0.8, headY + headR * 1.1);
+            ctx.lineTo(cx + neckW, headY + headR * 0.95);
+            ctx.lineTo(cx + neckW * 0.3, headY + headR * 1.7);
+            ctx.closePath();
+            ctx.fill();
+
+            if (charData.accessory === 'faixa') {
+                ctx.strokeStyle = '#009c3b';
+                ctx.lineWidth = headR * 0.35;
+                ctx.beginPath();
+                ctx.moveTo(cx - shoulderW, headY + headR * 1.05);
+                ctx.lineTo(cx + shoulderW * 0.8, y + h);
+                ctx.stroke();
+
+                ctx.strokeStyle = '#ffdf00';
+                ctx.lineWidth = headR * 0.12;
+                ctx.beginPath();
+                ctx.moveTo(cx - shoulderW, headY + headR * 1.05);
+                ctx.lineTo(cx + shoulderW * 0.8, y + h);
+                ctx.stroke();
+            }
+
+            ctx.fillStyle = skinShadow;
+            ctx.beginPath();
+            ctx.ellipse(cx - headR * 0.92, headY, headR * 0.18, headR * 0.28, 0, 0, Math.PI * 2);
+            ctx.ellipse(cx + headR * 0.92, headY, headR * 0.18, headR * 0.28, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = skin;
+            ctx.beginPath();
+            ctx.ellipse(cx - headR * 0.9, headY, headR * 0.14, headR * 0.22, 0, 0, Math.PI * 2);
+            ctx.ellipse(cx + headR * 0.9, headY, headR * 0.14, headR * 0.22, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            const headGrad = ctx.createRadialGradient(cx - headR * 0.2, headY - headR * 0.2, headR * 0.1, cx, headY, headR * 1.2);
+            headGrad.addColorStop(0, skinHighlight);
+            headGrad.addColorStop(0.6, skin);
+            headGrad.addColorStop(1, skinShadow);
+            ctx.fillStyle = headGrad;
+
+            ctx.beginPath();
+            ctx.ellipse(cx, headY, headR * 0.88, headR * 1.05, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            const eyeY = headY - headR * 0.12;
+            const eyeSpacing = headR * 0.42;
+
+            ctx.fillStyle = hairShadow;
+            ctx.strokeStyle = hairShadow;
+            ctx.lineWidth = headR * (isFemale ? 0.06 : 0.08);
+            ctx.lineCap = 'round';
+
+            const browY = eyeY - headR * 0.22;
+            ctx.beginPath();
+            if (expression === 'firme') {
+                ctx.moveTo(cx - eyeSpacing - headR * 0.22, browY - headR * 0.05);
+                ctx.lineTo(cx - eyeSpacing + headR * 0.18, browY + headR * 0.08);
+                ctx.moveTo(cx + eyeSpacing + headR * 0.22, browY - headR * 0.05);
+                ctx.lineTo(cx + eyeSpacing - headR * 0.18, browY + headR * 0.08);
+            } else if (expression === 'surpreso') {
+                ctx.arc(cx - eyeSpacing, browY - headR * 0.1, headR * 0.2, Math.PI * 1.1, Math.PI * 1.9);
+                ctx.arc(cx + eyeSpacing, browY - headR * 0.1, headR * 0.2, Math.PI * 1.1, Math.PI * 1.9);
+            } else {
+                ctx.moveTo(cx - eyeSpacing - headR * 0.2, browY);
+                ctx.quadraticCurveTo(cx - eyeSpacing, browY - headR * 0.08, cx - eyeSpacing + headR * 0.18, browY);
+                ctx.moveTo(cx + eyeSpacing - headR * 0.18, browY);
+                ctx.quadraticCurveTo(cx + eyeSpacing, browY - headR * 0.08, cx + eyeSpacing + headR * 0.2, browY);
+            }
+            ctx.stroke();
+
+            const drawEye = (ex) => {
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.ellipse(ex, eyeY, headR * 0.2, headR * 0.13, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#2d3748';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+
+                ctx.fillStyle = '#2b1d0f';
+                ctx.beginPath();
+                ctx.arc(ex, eyeY, headR * 0.09, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = '#000000';
+                ctx.beginPath();
+                ctx.arc(ex, eyeY, headR * 0.05, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(ex - headR * 0.03, eyeY - headR * 0.03, headR * 0.025, 0, Math.PI * 2);
+                ctx.fill();
+
+                if (isFemale && pose !== 'defeat') {
+                    ctx.strokeStyle = '#020617';
+                    ctx.lineWidth = 1.8;
+                    ctx.beginPath();
+                    ctx.arc(ex, eyeY, headR * 0.2, Math.PI * 1.15, Math.PI * 1.85);
+                    ctx.stroke();
+                }
+            };
+
+            if (pose === 'defeat') {
+                ctx.strokeStyle = '#1e293b';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.moveTo(cx - eyeSpacing - 5, eyeY - 5); ctx.lineTo(cx - eyeSpacing + 5, eyeY + 5);
+                ctx.moveTo(cx - eyeSpacing + 5, eyeY - 5); ctx.lineTo(cx - eyeSpacing - 5, eyeY + 5);
+                ctx.moveTo(cx + eyeSpacing - 5, eyeY - 5); ctx.lineTo(cx + eyeSpacing + 5, eyeY + 5);
+                ctx.moveTo(cx + eyeSpacing + 5, eyeY - 5); ctx.lineTo(cx + eyeSpacing - 5, eyeY + 5);
+                ctx.stroke();
+            } else {
+                drawEye(cx - eyeSpacing);
+                drawEye(cx + eyeSpacing);
+            }
+
+            const noseY = headY + headR * 0.15;
+            ctx.fillStyle = skinShadow;
+            ctx.beginPath();
+            ctx.moveTo(cx, eyeY - headR * 0.05);
+            ctx.lineTo(cx - headR * 0.07, noseY + headR * 0.1);
+            ctx.lineTo(cx + headR * 0.07, noseY + headR * 0.1);
+            ctx.closePath();
+            ctx.fill();
+
+            const mouthY = headY + headR * 0.45;
+            const lipColor = isFemale ? '#dc2626' : '#7f1d1d';
+            if (pose === 'talk' || expression === 'sorriso') {
+                ctx.fillStyle = lipColor;
+                ctx.beginPath();
+                ctx.ellipse(cx, mouthY, headR * 0.25, headR * 0.15, 0, 0, Math.PI);
+                ctx.fill();
+                ctx.strokeStyle = '#450a0a';
+                ctx.stroke();
+
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.rect(cx - headR * 0.18, mouthY, headR * 0.36, headR * 0.06);
+                ctx.fill();
+            } else if (expression === 'surpreso') {
+                ctx.fillStyle = '#450a0a';
+                ctx.beginPath();
+                ctx.ellipse(cx, mouthY, headR * 0.12, headR * 0.16, 0, 0, Math.PI * 2);
+                ctx.fill();
+            } else {
+                ctx.strokeStyle = isFemale ? '#b91c1c' : adjustColor(skinShadow, -30);
+                ctx.lineWidth = isFemale ? 3 : 2.5;
+                ctx.beginPath();
+                ctx.moveTo(cx - headR * 0.2, mouthY);
+                ctx.quadraticCurveTo(cx, mouthY + (expression === 'firme' ? -headR * 0.04 : headR * 0.04), cx + headR * 0.2, mouthY);
+                ctx.stroke();
+            }
+
+            ctx.fillStyle = hair;
+            ctx.strokeStyle = hairHighlight;
+            ctx.lineWidth = 1.5;
+
+            const hairBaseY = headY - headR * 0.45;
+
+            if (style === 'topete') {
+                const hairGrad = ctx.createLinearGradient(cx, hairBaseY - headR * 1.2, cx, hairBaseY);
+                hairGrad.addColorStop(0, hairHighlight);
+                hairGrad.addColorStop(0.5, hair);
+                hairGrad.addColorStop(1, hairShadow);
+                ctx.fillStyle = hairGrad;
+
+                ctx.beginPath();
+                ctx.moveTo(cx - headR * 0.88, hairBaseY + headR * 0.1);
+                ctx.bezierCurveTo(cx - headR * 1.0, hairBaseY - headR * 1.1, cx + headR * 0.2, hairBaseY - headR * 1.3, cx + headR * 0.9, hairBaseY - headR * 0.1);
+                ctx.bezierCurveTo(cx + headR * 0.5, hairBaseY + headR * 0.1, cx - headR * 0.5, hairBaseY + headR * 0.1, cx - headR * 0.88, hairBaseY + headR * 0.1);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+            } else if (style === 'curto') {
+                ctx.beginPath();
+                ctx.arc(cx, headY - headR * 0.2, headR * 0.95, Math.PI * 0.85, Math.PI * 0.15);
+                ctx.bezierCurveTo(cx + headR * 0.8, hairBaseY - headR * 0.4, cx - headR * 0.8, hairBaseY - headR * 0.4, cx - headR * 0.95, hairBaseY + headR * 0.1);
+                ctx.closePath();
+                ctx.fill();
+            } else if (style === 'longo') {
+                ctx.beginPath();
+                ctx.arc(cx, headY - headR * 0.2, headR * 0.98, Math.PI, 0);
+                ctx.bezierCurveTo(cx + headR * 0.8, hairBaseY - headR * 0.2, cx - headR * 0.8, hairBaseY - headR * 0.2, cx - headR * 0.98, hairBaseY + headR * 0.1);
+                ctx.closePath();
+                ctx.fill();
+            } else if (style === 'afro') {
+                const afroGrad = ctx.createRadialGradient(cx, headY - headR * 0.4, headR * 0.3, cx, headY - headR * 0.4, headR * 1.3);
+                afroGrad.addColorStop(0, hairHighlight);
+                afroGrad.addColorStop(0.7, hair);
+                afroGrad.addColorStop(1, hairShadow);
+                ctx.fillStyle = afroGrad;
+
+                ctx.beginPath();
+                ctx.arc(cx, headY - headR * 0.4, headR * 1.2, 0, Math.PI * 2);
+                ctx.fill();
+            } else if (style === 'mohawk') {
+                ctx.fillStyle = hair;
+                ctx.beginPath();
+                ctx.moveTo(cx - headR * 0.2, hairBaseY);
+                ctx.lineTo(cx - headR * 0.3, hairBaseY - headR * 1.2);
+                ctx.lineTo(cx, hairBaseY - headR * 1.4);
+                ctx.lineTo(cx + headR * 0.3, hairBaseY - headR * 1.2);
+                ctx.lineTo(cx + headR * 0.2, hairBaseY);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+            } else if (style === 'capacete') {
+                ctx.beginPath();
+                ctx.arc(cx, headY - headR * 0.2, headR * 1.02, Math.PI * 0.9, Math.PI * 0.1);
+                ctx.lineTo(cx + headR * 0.95, hairBaseY + headR * 0.1);
+                ctx.lineTo(cx - headR * 0.95, hairBaseY + headR * 0.1);
+                ctx.closePath();
+                ctx.fill();
+            } else if (style === 'careca') {
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+                ctx.beginPath();
+                ctx.ellipse(cx - headR * 0.25, headY - headR * 0.6, headR * 0.3, headR * 0.15, -0.3, 0, Math.PI * 2);
+                ctx.fill();
+            } else if (style === 'classico') {
+                ctx.beginPath();
+                ctx.arc(cx, headY - headR * 0.2, headR * 0.96, Math.PI * 0.85, Math.PI * 0.15);
+                ctx.fill();
+            }
+
+            if (charData.accessory === 'oculos') {
+                ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
+                ctx.strokeStyle = '#020617';
+                ctx.lineWidth = 2;
+
+                ctx.beginPath();
+                ctx.roundRect(cx - eyeSpacing - headR * 0.28, eyeY - headR * 0.18, headR * 0.52, headR * 0.36, 4);
+                ctx.roundRect(cx + eyeSpacing - headR * 0.24, eyeY - headR * 0.18, headR * 0.52, headR * 0.36, 4);
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.fillRect(cx - headR * 0.1, eyeY - headR * 0.08, headR * 0.2, headR * 0.08);
+            } else if (charData.accessory === 'bone') {
+                ctx.fillStyle = '#1e3a8a';
+                ctx.beginPath();
+                ctx.arc(cx, headY - headR * 0.4, headR * 1.05, Math.PI, 0);
+                ctx.fill();
+
+                ctx.fillStyle = '#1e293b';
+                ctx.beginPath();
+                ctx.ellipse(cx, headY - headR * 0.38, headR * 1.25, headR * 0.22, 0, 0, Math.PI);
+                ctx.fill();
+            } else if (charData.accessory === 'capacete') {
+                ctx.fillStyle = '#eab308';
+                ctx.beginPath();
+                ctx.arc(cx, headY - headR * 0.35, headR * 1.1, Math.PI, 0);
+                ctx.fill();
+
+                ctx.fillRect(cx - headR * 0.1, headY - headR * 1.4, headR * 0.2, headR * 1.0);
+
+                ctx.fillStyle = '#ca8a04';
+                ctx.fillRect(cx - headR * 1.2, headY - headR * 0.4, headR * 2.4, headR * 0.18);
+            } else if (charData.accessory === 'microfone') {
+                ctx.fillStyle = '#64748b';
+                ctx.fillRect(cx + headR * 0.6, headY + headR * 0.1, headR * 0.15, headR * 1.2);
+
+                const micGrad = ctx.createRadialGradient(cx + headR * 0.67, headY, headR * 0.05, cx + headR * 0.67, headY, headR * 0.22);
+                micGrad.addColorStop(0, '#f1f5f9');
+                micGrad.addColorStop(0.7, '#475569');
+                micGrad.addColorStop(1, '#0f172a');
+                ctx.fillStyle = micGrad;
+                ctx.beginPath();
+                ctx.arc(cx + headR * 0.67, headY, headR * 0.22, 0, Math.PI * 2);
+                ctx.fill();
+            } else if (charData.accessory === 'dossie') {
+                ctx.fillStyle = '#d97706';
+                ctx.fillRect(cx - w * 0.38, y + h - headR * 1.2, headR * 0.9, headR * 1.1);
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(cx - w * 0.36, y + h - headR * 1.15, headR * 0.8, headR * 0.9);
+            } else if (charData.accessory === 'constituicao') {
+                const bookX = cx + w * 0.12;
+                const bookY = y + h - headR * 1.5;
+                const bookW = headR * 0.95;
+                const bookH = headR * 1.35;
+
+                ctx.fillStyle = '#064e3b';
+                ctx.fillRect(bookX, bookY, bookW, bookH);
+                ctx.strokeStyle = '#f59e0b';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(bookX, bookY, bookW, bookH);
+
+                ctx.fillStyle = '#f59e0b';
+                ctx.beginPath();
+                ctx.moveTo(bookX + bookW / 2, bookY + 6);
+                ctx.lineTo(bookX + bookW - 5, bookY + bookH / 2);
+                ctx.lineTo(bookX + bookW / 2, bookY + bookH - 6);
+                ctx.lineTo(bookX + 5, bookY + bookH / 2);
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.fillStyle = '#000000';
+                ctx.font = '900 8px Inter, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('CF/88', bookX + bookW / 2, bookY + bookH / 2 + 3);
+            } else if (charData.accessory === 'detergente') {
+                const detX = cx + w * 0.16;
+                const detY = y + h - headR * 1.6;
+                const detW = headR * 0.65;
+                const detH = headR * 1.4;
+
+                ctx.fillStyle = '#facc15';
+                ctx.beginPath();
+                ctx.roundRect(detX, detY + detH * 0.25, detW, detH * 0.75, 5);
+                ctx.fill();
+                ctx.strokeStyle = '#ca8a04';
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+
+                ctx.fillStyle = '#eab308';
+                ctx.fillRect(detX + detW * 0.25, detY + detH * 0.1, detW * 0.5, detH * 0.18);
+
+                ctx.fillStyle = '#dc2626';
+                ctx.beginPath();
+                ctx.roundRect(detX + detW * 0.2, detY, detW * 0.6, detH * 0.1, 2);
+                ctx.fill();
+
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(detX + 2, detY + detH * 0.45, detW - 4, detH * 0.35);
+                ctx.fillStyle = '#dc2626';
+                ctx.font = '900 8px Inter, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('YPÊ', detX + detW / 2, detY + detH * 0.68);
+            }
+        }
+
+        /* ==========================================================================
+           FIGHT ENGINE
+           ========================================================================== */
+        let p1Pos = { x: 150, y: 260, vx: 0, vy: 0, isJumping: false };
+        let p2Pos = { x: 650, y: 260, vx: 0, vy: 0 };
+        let fightLoopId = null;
+        let fightParticles = [];
+        let hitPopups = [];
+        let screenShake = 0;
+        let comboCount = 0;
+
+        function createHitParticles(x, y, color) {
+            for (let i = 0; i < 15; i++) {
+                fightParticles.push({
+                    x: x, y: y,
+                    vx: (Math.random() - 0.5) * 12,
+                    vy: (Math.random() - 0.5) * 12,
+                    size: Math.random() * 8 + 4,
+                    color: color,
+                    life: 25
+                });
+            }
+            for (let j = 0; j < 6; j++) {
+                fightParticles.push({
+                    x: x, y: y,
+                    vx: (Math.random() - 0.5) * 10,
+                    vy: -Math.random() * 8 - 2,
+                    size: 10,
+                    isFlyer: true,
+                    life: 40
+                });
+            }
+        }
+
+        function createHitText(x, y, text) {
+            hitPopups.push({ x: x, y: y, text: text, life: 30, vy: -2 });
+        }
+
+        function startFight() {
+            showPage('fight');
+            gameState.fight.active = true;
+            gameState.fight.p1Hp = 100 + (gameState.debate.p1Score > gameState.debate.p2Score ? 20 : 0);
+            gameState.fight.p2Hp = 100;
+            gameState.fight.p1Special = 0;
+
+            document.getElementById('fightP1Name').innerText = gameState.player.name;
+            document.getElementById('fightP2Name').innerText = gameState.opponent.name;
+            document.getElementById('fightP1HpBar').style.width = '100%';
+            document.getElementById('fightP2HpBar').style.width = '100%';
+            document.getElementById('fightP1HpText').innerText = `${gameState.fight.p1Hp} HP`;
+            document.getElementById('fightP2HpText').innerText = `${gameState.fight.p2Hp} HP`;
+
+            p1Pos = { x: 150, y: 260, vx: 0, vy: 0, isJumping: false };
+            p2Pos = { x: 650, y: 260, vx: 0, vy: 0 };
+
+            if (fightLoopId) cancelAnimationFrame(fightLoopId);
+            fightLoop();
+        }
+
+        function touchMove(dir) {
+            p1Pos.vx = dir * 6;
+        }
+
+        function touchJump() {
+            if (!p1Pos.isJumping) {
+                p1Pos.vy = -14;
+                p1Pos.isJumping = true;
+            }
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (!gameState.fight.active) return;
+            if (e.key === 'a' || e.key === 'A' || e.key === 'ArrowLeft') p1Pos.vx = -6;
+            if (e.key === 'd' || e.key === 'D' || e.key === 'ArrowRight') p1Pos.vx = 6;
+            if (e.key === 'w' || e.key === 'W' || e.key === 'ArrowUp') touchJump();
+            if (e.key === 'j' || e.key === 'J') fightAttack('punch');
+            if (e.key === 'k' || e.key === 'K') fightAttack('kick');
+            if (e.key === 'l' || e.key === 'L') fightAttack('special');
+        });
+
+        window.addEventListener('keyup', (e) => {
+            if (!gameState.fight.active) return;
+            if (['a', 'A', 'd', 'D', 'ArrowLeft', 'ArrowRight'].includes(e.key)) p1Pos.vx = 0;
+        });
+
+        function fightLoop() {
+            if (!gameState.fight.active) return;
+
+            const canvas = document.getElementById('fightCanvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width;
+            const h = canvas.height;
+
+            ctx.save();
+            if (screenShake > 0) {
+                ctx.translate((Math.random() - 0.5) * screenShake, (Math.random() - 0.5) * screenShake);
+                screenShake *= 0.85;
+            }
+
+            ctx.clearRect(0, 0, w, h);
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(0, 0, w, h);
+
+            ctx.fillStyle = '#1e293b';
+            ctx.fillRect(0, h - 60, w, 60);
+            ctx.fillStyle = '#009c3b';
+            ctx.fillRect(0, h - 60, w, 6);
+
+            p1Pos.x += p1Pos.vx;
+            p1Pos.y += p1Pos.vy;
+            if (p1Pos.y < 260) {
+                p1Pos.vy += 0.8;
+            } else {
+                p1Pos.y = 260;
+                p1Pos.vy = 0;
+                p1Pos.isJumping = false;
+            }
+            p1Pos.x = Math.max(40, Math.min(w - 40, p1Pos.x));
+
+            if (Math.random() < 0.05) {
+                p2Pos.x += (p1Pos.x < p2Pos.x ? -4 : 4);
+            }
+            p2Pos.x = Math.max(40, Math.min(w - 40, p2Pos.x));
+
+            if (Math.abs(p1Pos.x - p2Pos.x) < 70 && Math.random() < 0.04) {
+                gameState.fight.p1Hp = Math.max(0, gameState.fight.p1Hp - 8);
+                document.getElementById('fightP1HpBar').style.width = `${Math.max(0, (gameState.fight.p1Hp / 120) * 100)}%`;
+                document.getElementById('fightP1HpText').innerText = `${gameState.fight.p1Hp} HP`;
+                createHitParticles(p1Pos.x, p1Pos.y - 40, '#ef4444');
+                createHitText(p1Pos.x, p1Pos.y - 80, 'GOLPE BAIXO!');
+                screenShake = 12;
+                playSfx('punch');
+                if (gameState.fight.p1Hp <= 0) endFight(false);
+            }
+
+            drawAvatarAt(ctx, gameState.player, p1Pos.x, p1Pos.y, 'punch');
+            drawAvatarAt(ctx, gameState.opponent, p2Pos.x, p2Pos.y, 'normal');
+
+            for (let i = fightParticles.length - 1; i >= 0; i--) {
+                let p = fightParticles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.life--;
+
+                if (p.isFlyer) {
+                    ctx.fillStyle = '#ffdf00';
+                    ctx.fillRect(p.x, p.y, 12, 6);
+                    ctx.fillStyle = '#000000';
+                    ctx.fillRect(p.x + 2, p.y + 2, 8, 2);
+                } else {
+                    ctx.fillStyle = p.color;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                if (p.life <= 0) fightParticles.splice(i, 1);
+            }
+
+            for (let j = hitPopups.length - 1; j >= 0; j--) {
+                let txt = hitPopups[j];
+                txt.y += txt.vy;
+                txt.life--;
+
+                ctx.fillStyle = '#facc15';
+                ctx.font = '900 16px "Press Start 2P", cursive';
+                ctx.textAlign = 'center';
+                ctx.fillText(txt.text, txt.x, txt.y);
+
+                if (txt.life <= 0) hitPopups.splice(j, 1);
+            }
+
+            if (comboCount > 1) {
+                ctx.fillStyle = '#ffdf00';
+                ctx.font = '900 22px "Press Start 2P", cursive';
+                ctx.textAlign = 'left';
+                ctx.fillText(`${comboCount}x COMBO! 🔥`, 30, 60);
+            }
+
+            ctx.restore();
+            fightLoopId = requestAnimationFrame(fightLoop);
+        }
+
+        function fightAttack(type) {
+            if (!gameState.fight.active) return;
+
+            if (type === 'punch') {
+                playSfx('punch');
+                gameState.fight.p1Special = Math.min(100, gameState.fight.p1Special + 15);
+                if (Math.abs(p1Pos.x - p2Pos.x) < 90) {
+                    comboCount++;
+                    gameState.fight.p2Hp = Math.max(0, gameState.fight.p2Hp - 12);
+                    document.getElementById('fightP2HpBar').style.width = `${gameState.fight.p2Hp}%`;
+                    document.getElementById('fightP2HpText').innerText = `${gameState.fight.p2Hp} HP`;
+                    createHitParticles(p2Pos.x, p2Pos.y - 40, '#22c55e');
+                    createHitText(p2Pos.x, p2Pos.y - 80, comboCount > 2 ? 'RETÓRICA MORTAL!' : 'POW!');
+                    screenShake = 10;
+                    if (gameState.fight.p2Hp <= 0) endFight(true);
+                } else {
+                    comboCount = 0;
+                }
+            } else if (type === 'kick') {
+                playSfx('punch');
+                gameState.fight.p1Special = Math.min(100, gameState.fight.p1Special + 20);
+                if (Math.abs(p1Pos.x - p2Pos.x) < 100) {
+                    comboCount++;
+                    gameState.fight.p2Hp = Math.max(0, gameState.fight.p2Hp - 18);
+                    document.getElementById('fightP2HpBar').style.width = `${gameState.fight.p2Hp}%`;
+                    document.getElementById('fightP2HpText').innerText = `${gameState.fight.p2Hp} HP`;
+                    createHitParticles(p2Pos.x, p2Pos.y - 40, '#3b82f6');
+                    createHitText(p2Pos.x, p2Pos.y - 80, 'CHUTE ELEITORAL!');
+                    screenShake = 14;
+                    if (gameState.fight.p2Hp <= 0) endFight(true);
+                } else {
+                    comboCount = 0;
+                }
+            } else if (type === 'special') {
+                if (gameState.fight.p1Special >= 100) {
+                    playSfx('special');
+                    gameState.fight.p1Special = 0;
+                    gameState.fight.p2Hp = Math.max(0, gameState.fight.p2Hp - 40);
+                    document.getElementById('fightP2HpBar').style.width = `${gameState.fight.p2Hp}%`;
+                    document.getElementById('fightP2HpText').innerText = `${gameState.fight.p2Hp} HP`;
+                    createHitParticles(p2Pos.x, p2Pos.y - 50, '#eab308');
+                    createHitText(p2Pos.x, p2Pos.y - 100, 'ESPECIAL SUPREMO!');
+                    screenShake = 25;
+                    if (gameState.fight.p2Hp <= 0) endFight(true);
+                } else {
+                    alert('Especial ainda não está 100% carregado!');
+                }
+            }
+
+            document.getElementById('fightP1SpecialBar').style.width = `${gameState.fight.p1Special}%`;
+        }
+
+        function endFight(isP1Win) {
+            gameState.fight.active = false;
+            if (fightLoopId) cancelAnimationFrame(fightLoopId);
+
+            const banner = document.getElementById('fightKoBanner');
+            if (banner) {
+                banner.classList.remove('hidden');
+                banner.innerText = isP1Win ? "VITÓRIA! K.O. 🥊" : "DERROTA! 🥊";
+                setTimeout(() => banner.classList.add('hidden'), 2000);
+            }
+
+            if (isP1Win) {
+                gameState.stats.kos++;
+                gameState.stats.xp += 150;
+                playSfx('cheer');
+                setTimeout(() => {
+                    alert(`VOCÊ VENCEU A TRETA ARCADE! +150 XP adicionados.`);
+                    showPage('menu');
+                }, 1500);
+            } else {
+                setTimeout(() => {
+                    alert(`VOCÊ FOI NOCAUTEADO! Treine mais na oratória e nos golpes!`);
+                    showPage('menu');
+                }, 1500);
+            }
+        }
+
+        /* ==========================================================================
+           MULTIPLAYER & EXTRA MODES
+           ========================================================================== */
+        function createRoom() {
+            playSfx('click');
+            const mode = document.getElementById('createRoomMode').value;
+            const topic = document.getElementById('createRoomTopic').value;
+            const roomCode = 'BR' + Math.floor(1000 + Math.random() * 9000);
+
+            gameState.room = { code: roomCode, mode, topic, players: [gameState.player] };
+            document.getElementById('roomLobbyContainer').classList.remove('hidden');
+            document.getElementById('roomLobbyCode').innerText = roomCode;
+            renderRoomPlayers();
+        }
+
+        function joinRoom() {
+            playSfx('click');
+            const code = (document.getElementById('joinRoomCodeInput').value || '').trim().toUpperCase();
+            if (code.length < 4) {
+                alert('Digite um código de sala válido!');
+                return;
+            }
+            gameState.room = { code, mode: 'DEBATE_FIGHT', topic: 'Geral', players: [gameState.player, { name: 'Anfitrião', partyTag: 'OP', side: 'DIREITA' }] };
+            document.getElementById('roomLobbyContainer').classList.remove('hidden');
+            document.getElementById('roomLobbyCode').innerText = code;
+            renderRoomPlayers();
+        }
+
+        function leaveRoom() {
+            playSfx('click');
+            gameState.room = null;
+            document.getElementById('roomLobbyContainer').classList.add('hidden');
+        }
+
+        function renderRoomPlayers() {
+            const list = document.getElementById('roomPlayersList');
+            if (!list || !gameState.room) return;
+            list.innerHTML = '';
+            gameState.room.players.forEach((p, idx) => {
+                list.innerHTML += `<div class="bg-slate-950 p-2 rounded-lg flex justify-between items-center text-xs"><span>👤 ${p.name} (${p.partyTag || 'PBR'})</span><span class="text-brYellow font-bold">${idx === 0 ? 'Anfitrião' : 'Pronto'}</span></div>`;
+            });
+            document.getElementById('roomCountText').innerText = `${gameState.room.players.length} / 30`;
+        }
+
+        function sendChatMessage() {
+            const input = document.getElementById('roomChatInput');
+            const msg = input ? input.value.trim() : '';
+            if (!msg) return;
+            input.value = '';
+            const box = document.getElementById('roomChatBox');
+            if (box) {
+                box.innerHTML += `<div><b class="text-brYellow">${gameState.player.name}:</b> ${msg}</div>`;
+                box.scrollTop = box.scrollHeight;
+            }
+        }
+
+        function startMultiplayerMatch() {
+            playSfx('cheer');
+            leaveRoom();
+            startSinglePlayer();
+        }
+
+        function selectGameMode(mode) {
+            playSfx('click');
+            gameState.mode = mode;
+            alert(`Modo selecionado: ${mode}`);
+            startSinglePlayer();
+        }
+
+        function startCampaignMode() {
+            playSfx('click');
+            gameState.mode = 'DEBATE_FIGHT';
+            alert('Iniciando Modo Eleição BR: 1ª Parada - Região Sul!');
+            startSinglePlayer();
+        }
+
+        function startTournamentMode() {
+            playSfx('click');
+            gameState.mode = 'DEBATE_FIGHT';
+            alert('Iniciando Torneio das 8 Candidaturas! Quartas de final.');
+            startSinglePlayer();
+        }
+
+        function renderRankingAndAchievements() {
+            document.getElementById('statLevel').innerText = gameState.stats.level;
+            document.getElementById('statXp').innerText = gameState.stats.xp;
+            document.getElementById('statWins').innerText = gameState.stats.wins;
+            document.getElementById('statKos').innerText = gameState.stats.kos;
+
+            const grid = document.getElementById('achievementsGrid');
+            if (!grid) return;
+            grid.innerHTML = `
+                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex items-center gap-3"><span class="text-2xl">🥇</span><div><div class="text-xs font-bold text-white">Primeiro Debate</div><div class="text-[10px] text-slate-400">Participe da sua primeira discussão pública.</div></div></div>
+                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex items-center gap-3"><span class="text-2xl">🥊</span><div><div class="text-xs font-bold text-white">Sobreviveu à Treta</div><div class="text-[10px] text-slate-400">Vença um confronto arcade.</div></div></div>
+            `;
+        }
+
+        function resetGameData() {
+            if (confirm('Deseja realmente resetar todas as suas conquistas e dados salvos?')) {
+                localStorage.clear();
+                location.reload();
+            }
+        }
+
+        /* SUPABASE REALTIME MULTIPLAYER FUNCTIONS */
+        let supabaseClient = null;
+
+        function saveSupabaseConfig() {
+            playSfx('click');
+            const url = document.getElementById('supabaseUrlInput').value.trim();
+            const key = document.getElementById('supabaseKeyInput').value.trim();
+            if (url && key) {
+                localStorage.setItem('debate_br_sp_url', url);
+                localStorage.setItem('debate_br_sp_key', key);
+                initSupabaseClient(url, key);
+                alert('Credenciais Supabase salvas com sucesso!');
+            } else {
+                alert('Por favor, preencha a URL e a Anon Key do Supabase.');
+            }
+        }
+
+        function initSupabaseClient(url, key) {
+            try {
+                if (window.supabase) {
+                    supabaseClient = window.supabase.createClient(url, key);
+                    const statusBanner = document.getElementById('mpStatusBanner');
+                    if (statusBanner) {
+                        statusBanner.className = "bg-emerald-950/80 border border-emerald-500/50 p-3 rounded-2xl mb-6 flex items-center gap-3 text-xs text-emerald-200";
+                        statusBanner.innerHTML = `<i class="fas fa-check-circle text-2xl text-emerald-400"></i><div><span class="font-bold block">Conectado ao Supabase Realtime ⚡</span><span>Salas e mensagens sincronizadas na nuvem em tempo real!</span></div>`;
+                    }
+                }
+            } catch(e) {}
+        }
+
+        /* INITIALIZATION ON LOAD */
+        window.onload = function() {
+            const savedPlayer = localStorage.getItem('debate_br_player');
+            if (savedPlayer) {
+                try { gameState.player = JSON.parse(savedPlayer); } catch(e){}
+            }
+
+            const spUrl = localStorage.getItem('debate_br_sp_url');
+            const spKey = localStorage.getItem('debate_br_sp_key');
+            if (spUrl && spKey) {
+                document.getElementById('supabaseUrlInput').value = spUrl;
+                document.getElementById('supabaseKeyInput').value = spKey;
+                initSupabaseClient(spUrl, spKey);
+            }
+
+            updateProfilePill();
+        };
+    </script>
+</body>
+</html>
